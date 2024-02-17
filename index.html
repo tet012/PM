@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Petals</title>
+    <script type="text/javascript" src="dat.gui.min.js"></script>
+
+    <style>
+        .petalsGroup {
+            /* filter: drop-shadow(0px 0px 16px rgba(0, 0, 0, 0.8)); */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 2px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        body {
+            background: darkgrey;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            place-content: center;
+        }
+
+        #app {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            place-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <svg width="1024" height="1024">
+            <defs>
+                <!-- Petaldynamically added here -->
+            </defs>
+            <rect fill="black" width="100%" height="100%" x="0" y="0"></rect>
+
+            <!-- <rect class="petalsGroup" width="20%" height="20%" x="40%" y="40%" rx="10000" ry="10000" fill="white"></rect> -->
+        </svg>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="prevBtn">Previous</button>
+            <span id="entropyCounter">Entropy: 0/0</span>
+            <button id="nextBtn">Next</button>
+        </div>
+
+
+    </div>
+</body>
+
+<script>
+    // Global
+    let svgNS = "http://www.w3.org/2000/svg";
+    let svgElement = document.querySelector('svg');
+    let defs = svgElement.querySelector('defs');
+    let W = 1024;
+    let H = 1024;
+
+    // //Petal Vars
+    // let petals = [4, 6, 8, 10, 12, 16, 20, 24, 28, 32][Math.floor(Math.random() * 10)];
+    // let layers = Math.floor(Math.random() * (32 - 4 + 1)) + 8;
+    // let petalWidth = [0.25, 0.5, 1][Math.floor(Math.random() * 3)];
+    // let petalsHeight = [0.25, 0.5, 1][Math.floor(Math.random() * 3)];
+    // let diameter = Math.floor(Math.random() * (200 - 10 + 1)) + 20;
+    // let hueShift = Math.floor(Math.random() * (50 - 5 + 1)) + 10;
+    // let rOffset = 0.0015;
+    // let rSpeed = 0.05;
+    // let layersOffset = Math.floor(Math.random() * (50 - 0.05 + 1)) + 5;
+    // // De 0.3 à 0.7 make sence
+    // let value1 = Math.random() * (0.7 - 0.3) + 0.3;
+    // let value2 = Math.random() * (0.7 - 0.3) + 0.3;
+    // let petalX = W * value1
+    // let petalY = H * value2
+    // let rHue1 = Math.random() * 360;
+    // let rHue2 = Math.random() * 360;
+    // let radiusX = Math.random() * 50 + 0;
+    // let radiusY = Math.random() * 500 + 0;
+    // let offX = [0.01, 0.02, 0.04, 0.06, 0.08][Math.floor(Math.random() * 5)];
+
+    let params = {
+        petals: 10, // Default value, replace with your initial value
+        layers: 8,
+        petalWidth: 0.5,
+        petalsHeight: 0.5,
+        diameter: 480,
+        hueShift: 10,
+        rOffset: 0.0015,
+        rSpeed: 0.05,
+        layersOffset: 5,
+        petalX: 500, // Replace with your calculated initial value
+        petalY: 500, // Replace with your calculated initial value
+        rHue1: 180, // Replace with your initial value
+        rHue2: 180, // Replace with your initial value
+        radiusX: 25, // Replace with your initial value
+        radiusY: 250, // Replace with your initial value
+        offX: 0.04 // Replace with your initial value
+    };
+
+    // Create dat.GUI instance
+    let gui = new dat.GUI();
+
+    let throttleTimer;
+
+    const throttle = (callback, time) => {
+        if (throttleTimer) return;
+
+        throttleTimer = setTimeout(() => {
+            callback();
+            throttleTimer = null;
+        }, time);
+    };
+
+    // Add GUI controls with throttle applied
+    gui.add(params, 'petals', 1, 32).step(1).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'layers', 4, 32).step(1).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'petalWidth', 0.25, 1).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'petalsHeight', 0.25, 1).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'diameter', 10, 800).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'hueShift', 5, 50).onChange(() => throttle(generatePetals, 50));
+    // gui.add(params, 'rOffset', 0.001, 0.01).onChange(() => throttle(generatePetals, 50));
+    // gui.add(params, 'rSpeed', 0.01, 0.1).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'layersOffset', 5, 50).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'petalX', 0, 1000).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'petalY', 0, 1000).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'radiusX', 0, 50).onChange(() => throttle(generatePetals, 50));
+    gui.add(params, 'radiusY', 0, 500).onChange(() => throttle(generatePetals, 50));
+
+    generatePetals();
+
+    function generatePetals() {
+        defs.innerHTML = '';
+
+        for (let j = params.layers; j > 0; j--) {
+
+            let hue1 = params.rHue1 + j * params.hueShift;
+            let hue2 = params.rHue2 + j * params.hueShift;
+
+            let petalId = `petal${j}`;
+            let saturation = 100 - j * 9;
+            let brightness = 94 - j * 9
+
+            let petalColor = `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`;
+
+            let petalW = (params.diameter * params.petalWidth) + (j * params.layersOffset);
+            let petalH = (params.diameter * params.petalsHeight) + (j * params.layersOffset * 0.9);
+
+            let maxW = 200;
+            let sourceMin = params.diameter;
+            let sourceMax = params.diameter + maxW;
+
+            let vrx = Math.abs(map(petalW, sourceMin, sourceMax, params.radiusX, params.radiusY));
+
+            let vry = 0;
+
+            let petal = document.createElementNS(svgNS, 'rect');
+
+            //Petal Position & Size
+            petal.setAttribute('width', `${petalW}`);
+            petal.setAttribute('height', `${petalH}`);
+            petal.setAttribute('x', `${params.petalX}`);
+            petal.setAttribute('y', `${params.petalY}`);
+
+            petal.setAttribute('rx', `${vrx}`);
+            // petal.setAttribute('fill', petalColor);
+
+            //Gradient
+            let gradientId = `gradient${j}`;
+            let gradient = document.createElementNS(svgNS, 'linearGradient');
+            gradient.setAttribute('id', gradientId);
+            gradient.setAttribute('x1', '0%');
+            gradient.setAttribute('y1', '0%');
+            gradient.setAttribute('x2', '100%');
+            gradient.setAttribute('y2', '0%');
+
+            // Add gradient stops
+            let stop1 = document.createElementNS(svgNS, 'stop');
+            stop1.setAttribute('offset', '0%');
+            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`);
+
+            let stop2 = document.createElementNS(svgNS, 'stop');
+            stop2.setAttribute('offset', '100%');
+            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 0.1)`);
+
+            gradient.appendChild(stop1);
+            gradient.appendChild(stop2);
+            defs.appendChild(gradient);
+
+            petal.setAttribute('fill', `url(#${gradientId})`);
+
+            let petalDef = document.createElementNS(svgNS, 'g');
+            petalDef.setAttribute('id', petalId);
+            petalDef.appendChild(petal);
+            defs.appendChild(petalDef);
+
+            let petalsGroup = document.createElementNS(svgNS, 'g');
+            petalsGroup.setAttribute('class', `petalsGroup`);
+            petalsGroup.dataset.rotationSpeed = j * params.rOffset;
+            svgElement.appendChild(petalsGroup);
+
+            for (let i = 0; i < params.petals; i++) {
+                let use = document.createElementNS(svgNS, 'use');
+                use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${petalId}`);
+                petalsGroup.appendChild(use);
+            }
+        }
+        move()
+    }
+
+    function move(time) {
+        document.querySelectorAll('.petalsGroup').forEach((group, groupIndex) => {
+            const children = group.children;
+            for (let i = 0; i < children.length; i++) {
+                let rotation = (i * 360 / params.petals);
+                const translateX = 0
+                const translateY = 0
+                children[i].setAttribute('transform', `rotate(${rotation}, ${(W / 2)}, ${H / 2}) translate(${translateX}, ${translateY}) `);
+            }
+        });
+    }
+
+    function map(value, low1, high1, low2, high2) {
+        return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+    }
+
+    let entropy = 0;
+
+    document.getElementById('nextBtn').addEventListener('click', function () {
+        entropy++;
+        update();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', function () {
+        entropy = Math.max(0, entropy - 1);
+        update();
+    });
+
+
+    function update() {
+        document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
+        document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
+        document.querySelectorAll('defs > *').forEach(e => e.remove());
+
+        params.petals = 4 + (2 * entropy);
+        params.layers = 8 + entropy;
+        params.rOffset += 0.001 * entropy;
+
+        params.rSpeed = 0.05 + (0.01 * entropy);
+        params.rotation = 0.0015 + (0.0005 * entropy);
+        params.rHue1 = params.rHue1 + entropy * 3;
+        params.rHue2 = params.rHue2 + entropy * 3;
+
+        generatePetals();
+    }
+
+    // function update() {
+    //     document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
+    //     document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
+    //     document.querySelectorAll('defs > *').forEach(e => e.remove());
+
+    //     rSpeed = 0.05 + (1 * entropy);
+    //     rotation = 0.0015 + (0.5 * entropy);
+    //     rHue1 = rHue1 + entropy * 3;
+    //     rHue2 = rHue2 + entropy * 3;
+
+    //     generatePetals();
+    // }
+
+
+</script>
+
+</html>
