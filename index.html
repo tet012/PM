@@ -110,14 +110,14 @@
 
     // Layers
     let layers = gui.addFolder('layers');
-    layers.add(params, 'layers', 0, 32).step(1).onChange(() => throttle(generatePetals, 50));
+    layers.add(params, 'layers', 0, 124).step(1).onChange(() => throttle(generatePetals, 50));
     layers.add(params, 'layersOffsetX', -200, 200).onChange(() => throttle(generatePetals, 50));
     layers.add(params, 'layersOffsetY', -200, 200).onChange(() => throttle(generatePetals, 50));
     layers.add(params, 'layersSize', -200, 200).onChange(() => throttle(generatePetals, 50));
 
     //Colors
     let colors = gui.addFolder('Colors');
-    colors.add(params, 'hueShift', 5, 50).onChange(() => throttle(generatePetals, 50));
+    colors.add(params, 'hueShift', 0.1, 50).onChange(() => throttle(generatePetals, 50));
     colors.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
     colors.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
 
@@ -125,7 +125,7 @@
     let group = gui.addFolder('Group');
     group.add(params, 'groupOffsetX', -50, 50).onChange(() => throttle(generatePetals, 50));
     group.add(params, 'groupOffsetY', -50, 50).onChange(() => throttle(generatePetals, 50));
-    group.add(params, 'rFactor', -360, 360).onChange(() => throttle(generatePetals, 50));
+    group.add(params, 'rFactor', -2000, 2000).onChange(() => throttle(generatePetals, 50));
     group.add(params, 'rOffset', 0, 20).onChange(() => throttle(generatePetals, 50));
 
 
@@ -199,26 +199,52 @@
 
             let stop1 = document.createElementNS(svgNS, 'stop');
             stop1.setAttribute('offset', '0%');
-            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, .1)`);
+            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`);
 
             let stop2 = document.createElementNS(svgNS, 'stop');
             stop2.setAttribute('offset', '100%');
-            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 0.5)`);
+            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 1)`);
 
             gradient.appendChild(stop1);
             gradient.appendChild(stop2);
             defs.appendChild(gradient);
-
             petal.setAttribute('fill', `url(#${gradientId})`);
+
+            // Filter
+            let filterId = `distortionFilter${j}`;
+            let scale = 20 + j * 5; // Increasing scale for more distortion with each layer
+
+            // Create the filter element
+            let filter = document.createElementNS(svgNS, 'filter');
+            filter.setAttribute('id', filterId);
+
+            // Create feTurbulence and feDisplacementMap elements
+            let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
+            feTurbulence.setAttribute('type', 'turbulence');
+            feTurbulence.setAttribute('baseFrequency', '0.02');
+            feTurbulence.setAttribute('numOctaves', '3');
+            feTurbulence.setAttribute('result', 'turbulence');
+
+            let feDisplacementMap = document.createElementNS(svgNS, 'feDisplacementMap');
+            feDisplacementMap.setAttribute('in2', 'turbulence');
+            feDisplacementMap.setAttribute('in', 'SourceGraphic');
+            feDisplacementMap.setAttribute('scale', scale);
+            feDisplacementMap.setAttribute('xChannelSelector', 'R');
+            feDisplacementMap.setAttribute('yChannelSelector', 'G');
+
+            // Append feTurbulence and feDisplacementMap to the filter
+            filter.appendChild(feTurbulence);
+            filter.appendChild(feDisplacementMap);
 
             let petalDef = document.createElementNS(svgNS, 'g');
             petalDef.setAttribute('id', petalId);
             petalDef.appendChild(petal);
             defs.appendChild(petalDef);
 
-
             let petalsGroup = document.createElementNS(svgNS, 'g');
             petalsGroup.setAttribute('class', `petalsGroup`);
+            petalsGroup.setAttribute('filter', `url(#${filterId})`);
+
             petalsGroup.setAttribute('transform', `rotate(${rFactor}, ${(W / 2)}, ${H / 2}) translate(${groupX}, ${groupY} )`);
             petalsGroup.dataset.rotationSpeed = j * params.rOffset;
             svgElement.appendChild(petalsGroup);
