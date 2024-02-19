@@ -266,27 +266,43 @@
         document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
         document.querySelectorAll('defs > *').forEach(e => e.remove());
 
-        // Example of non-linear and random adjustments based on entropy
-        params.petals = Math.floor(4 + Math.random() * entropy % 5);
-        params.layers = 8 + Math.floor(Math.random() * Math.sqrt(entropy));
-        params.rOffset += 0.001 * Math.random() * entropy;
-        params.rSpeed = 0.05 + Math.pow(0.01 * entropy, 1.2);
-        params.rotation = 0.0015 + (0.0005 * Math.random() * entropy);
-        params.rHue1 += Math.floor(Math.random() * 360 * Math.sin(entropy));
-        params.rHue2 += Math.floor(Math.random() * 360 * Math.cos(entropy));
+        // Adjusting parameters for emergent behavior
+        params.petals = Math.max(2, params.petals + Math.floor((Math.random() - 0.5) * 2 * Math.sqrt(entropy)));
+        params.layers += Math.floor((Math.random() - 0.5) * 2 * Math.log1p(entropy));
+        params.petalWidth *= 1 + (Math.random() - 0.5) * 0.1 * entropy;
+        params.petalsHeight *= 1 + (Math.random() - 0.5) * 0.1 * entropy;
+        params.diameter += (Math.random() - 0.5) * 20 * Math.sin(entropy);
+        params.hueShift += Math.floor((Math.random() - 0.5) * 20);
+        params.rOffset += (Math.random() - 0.5) * 0.002 * entropy;
+        params.rSpeed += (Math.random() - 0.5) * 0.01 * Math.sqrt(entropy);
+        params.layersSize += (Math.random() - 0.5) * Math.log1p(entropy);
+        params.layersOffsetX += (Math.random() - 0.5) * 10 * entropy;
+        params.layersOffsetY += (Math.random() - 0.5) * 10 * entropy;
 
-        // Introduce new parameters based on complex conditions
-        if (entropy % 3 === 0) {
-            params.groupOffsetX += (Math.random() - 0.5) * 20;
-            params.groupOffsetY += (Math.random() - 0.5) * 20;
-        }
+        params.petalX += (Math.random() - 0.5) * 5;
+        params.petalY += (Math.random() - 0.5) * 5;
 
-        if (entropy % 5 === 0) {
-            params.rFactor = (Math.random() - 0.5) * 2 * entropy;
-        }
+        params.offsetX += (Math.random() - 0.5) * 10;
+        params.offsetY += (Math.random() - 0.5) * 10;
+        params.rHue1 += Math.floor((Math.random() - 0.5) * 360 * Math.sin(entropy));
+        params.rHue2 += Math.floor((Math.random() - 0.5) * 360 * Math.cos(entropy));
+        params.radiusX += (Math.random() - 0.5) * 5;
+        params.radiusY += (Math.random() - 0.5) * 50;
+        // params.groupOffsetX += (Math.random() - 0.5) * 20 * Math.tan(entropy);
+        // params.groupOffsetY += (Math.random() - 0.5) * 20 * Math.tan(entropy);
+        params.rFactor += (Math.random() - 0.5) * 360 * Math.sin(entropy);
+
+        // Clamp values to maintain some constraints
+        params.petals = Math.max(1, params.petals);
+        params.layers = Math.max(1, params.layers);
+        params.petalWidth = Math.max(0.1, Math.min(params.petalWidth, 2));
+        params.petalsHeight = Math.max(0.1, Math.min(params.petalsHeight, 2));
+        params.diameter = Math.max(20, Math.min(params.diameter, 800));
+        params.layersSize = Math.max(-200, Math.min(params.layersSize, 200));
 
         generatePetals();
     }
+
 
 </script>
 
