@@ -6,61 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVG Petals</title>
     <script type="text/javascript" src="dat.gui.min.js"></script>
-
-    <style>
-        .petalsGroup {
-            /* filter: drop-shadow(0px 0px 16px rgba(0, 0, 0, 0.8)); */
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: sans-serif;
-        }
-
-        button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 2px;
-            background: #333;
-            color: white;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        body {
-            background: darkgrey;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            place-content: center;
-        }
-
-        #app {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            place-content: center;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div id="app">
-        <svg width="1024" height="1024">
+        <svg width="1024" height="1024" fill="black">
+            <rect x="0" y="0" width="100%" height="100%" fill="black" />
+
             <defs>
                 <!-- Petaldynamically added here -->
             </defs>
-            <rect fill="black" width="100%" height="100%" x="0" y="0"></rect>
-
-            <!-- <rect class="petalsGroup" width="20%" height="20%" x="40%" y="40%" rx="10000" ry="10000" fill="white"></rect> -->
         </svg>
 
         <div style="text-align: center; margin-top: 20px;">
@@ -103,7 +59,7 @@
     // let offX = [0.01, 0.02, 0.04, 0.06, 0.08][Math.floor(Math.random() * 5)];
 
     let params = {
-        petals: 10, // Default value, replace with your initial value
+        petals: 10,
         layers: 8,
         petalWidth: 0.5,
         petalsHeight: 0.5,
@@ -111,14 +67,19 @@
         hueShift: 10,
         rOffset: 0.0015,
         rSpeed: 0.05,
-        layersOffset: 5,
-        petalX: 500, // Replace with your calculated initial value
-        petalY: 500, // Replace with your calculated initial value
-        rHue1: 180, // Replace with your initial value
-        rHue2: 180, // Replace with your initial value
-        radiusX: 25, // Replace with your initial value
-        radiusY: 250, // Replace with your initial value
-        offX: 0.04 // Replace with your initial value
+        layersSize: 1,
+        layersOffsetX: 0,
+        layersOffsetY: 0,
+        petalX: 500,
+        petalY: 500,
+        offsetX: 0,
+        offsetY: 0,
+        rHue1: 180,
+        rHue2: 180,
+        radiusX: 25,
+        radiusY: 250,
+        groupOffsetX: 0,
+        groupOffsetY: 0,
     };
 
     // Create dat.GUI instance
@@ -135,58 +96,92 @@
         }, time);
     };
 
-    // Add GUI controls with throttle applied
-    gui.add(params, 'petals', 1, 32).step(1).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'layers', 4, 32).step(1).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'petalWidth', 0.25, 1).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'petalsHeight', 0.25, 1).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'diameter', 10, 800).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'hueShift', 5, 50).onChange(() => throttle(generatePetals, 50));
-    // gui.add(params, 'rOffset', 0.001, 0.01).onChange(() => throttle(generatePetals, 50));
-    // gui.add(params, 'rSpeed', 0.01, 0.1).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'layersOffset', 5, 50).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'petalX', 0, 1000).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'petalY', 0, 1000).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'radiusX', 0, 50).onChange(() => throttle(generatePetals, 50));
-    gui.add(params, 'radiusY', 0, 500).onChange(() => throttle(generatePetals, 50));
+    // Petals    
+    let petals = gui.addFolder('Petals');
+    petals.add(params, 'petals', 1, 32).step(1).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'petalWidth', 0.01, 2).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'petalsHeight', 0.01, 2).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'diameter', 10, 800).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'petalX', 0, 1000).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'petalY', 0, 1000).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'radiusX', 0, 50).onChange(() => throttle(generatePetals, 50));
+    petals.add(params, 'radiusY', 0, 500).onChange(() => throttle(generatePetals, 50));
+
+    // Layers
+    let layers = gui.addFolder('layers');
+    layers.add(params, 'layers', 0, 32).step(1).onChange(() => throttle(generatePetals, 50));
+    layers.add(params, 'layersOffsetX', -200, 200).onChange(() => throttle(generatePetals, 50));
+    layers.add(params, 'layersOffsetY', -200, 200).onChange(() => throttle(generatePetals, 50));
+    layers.add(params, 'layersSize', -200, 200).onChange(() => throttle(generatePetals, 50));
+
+    //Colors
+    let colors = gui.addFolder('Colors');
+    colors.add(params, 'hueShift', 5, 50).onChange(() => throttle(generatePetals, 50));
+    colors.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
+    colors.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
+
+    // Group
+    let group = gui.addFolder('Group');
+    group.add(params, 'groupOffsetX', -50, 50).onChange(() => throttle(generatePetals, 50));
+    group.add(params, 'groupOffsetY', -50, 50).onChange(() => throttle(generatePetals, 50));
+
+
+    petals.open();
+    layers.open();
+    colors.open();
+    group.open();
+
 
     generatePetals();
 
     function generatePetals() {
         defs.innerHTML = '';
+        document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
+
+
+        const maxSaturation = 100;
+        const minSaturation = 50;
+        const maxBrightness = 100;
+        const minBrightness = 60;
 
         for (let j = params.layers; j > 0; j--) {
 
+            let petalId = `petal${j}`;
+
+            // Colors
             let hue1 = params.rHue1 + j * params.hueShift;
             let hue2 = params.rHue2 + j * params.hueShift;
+            let saturation = (minSaturation, maxSaturation - (j * ((maxSaturation - minSaturation) / params.layers)));
+            let brightness = (minBrightness, maxBrightness - (j * ((maxBrightness - minBrightness) / params.layers)));
 
-            let petalId = `petal${j}`;
-            let saturation = 100 - j * 9;
-            let brightness = 94 - j * 9
+            // Size
+            let petalX = params.petalX + (params.layersOffsetX * j);
+            let petalY = params.petalY + (params.layersOffsetY * j);
 
-            let petalColor = `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`;
+            // let petalW = params.diameter * params.petalWidth;
+            // let petalH = params.diameter * params.petalsHeight;
+            // Size
+            let petalW = (params.diameter * params.petalWidth) + (j * params.layersSize);
+            let petalH = (params.diameter * params.petalsHeight) + (j * params.layersSize);
 
-            let petalW = (params.diameter * params.petalWidth) + (j * params.layersOffset);
-            let petalH = (params.diameter * params.petalsHeight) + (j * params.layersOffset * 0.9);
-
+            // Radius
             let maxW = 200;
             let sourceMin = params.diameter;
             let sourceMax = params.diameter + maxW;
-
             let vrx = Math.abs(map(petalW, sourceMin, sourceMax, params.radiusX, params.radiusY));
-
             let vry = 0;
+
+            // Group Params
+            let groupX = j * params.groupOffsetX
+            let groupY = j * params.groupOffsetY
 
             let petal = document.createElementNS(svgNS, 'rect');
 
             //Petal Position & Size
             petal.setAttribute('width', `${petalW}`);
             petal.setAttribute('height', `${petalH}`);
-            petal.setAttribute('x', `${params.petalX}`);
-            petal.setAttribute('y', `${params.petalY}`);
-
+            petal.setAttribute('x', `${petalX}`); // Use local petalX
+            petal.setAttribute('y', `${petalY}`); // Use local petalY
             petal.setAttribute('rx', `${vrx}`);
             // petal.setAttribute('fill', petalColor);
 
@@ -199,7 +194,6 @@
             gradient.setAttribute('x2', '100%');
             gradient.setAttribute('y2', '0%');
 
-            // Add gradient stops
             let stop1 = document.createElementNS(svgNS, 'stop');
             stop1.setAttribute('offset', '0%');
             stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`);
@@ -219,8 +213,10 @@
             petalDef.appendChild(petal);
             defs.appendChild(petalDef);
 
+
             let petalsGroup = document.createElementNS(svgNS, 'g');
             petalsGroup.setAttribute('class', `petalsGroup`);
+            petalsGroup.setAttribute('transform', `translate(${groupX}, ${groupY})`);
             petalsGroup.dataset.rotationSpeed = j * params.rOffset;
             svgElement.appendChild(petalsGroup);
 
@@ -278,20 +274,6 @@
 
         generatePetals();
     }
-
-    // function update() {
-    //     document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
-    //     document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
-    //     document.querySelectorAll('defs > *').forEach(e => e.remove());
-
-    //     rSpeed = 0.05 + (1 * entropy);
-    //     rotation = 0.0015 + (0.5 * entropy);
-    //     rHue1 = rHue1 + entropy * 3;
-    //     rHue2 = rHue2 + entropy * 3;
-
-    //     generatePetals();
-    // }
-
 
 </script>
 
