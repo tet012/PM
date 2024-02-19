@@ -11,7 +11,7 @@
 
 <body>
     <div id="app">
-        <svg width="1024" height="1024" fill="black">
+        <svg width="1024" height="1024">
             <rect x="0" y="0" width="100%" height="100%" fill="black" />
 
             <defs>
@@ -80,6 +80,7 @@
         radiusY: 250,
         groupOffsetX: 0,
         groupOffsetY: 0,
+        rFactor: 0,
     };
 
     // Create dat.GUI instance
@@ -124,6 +125,8 @@
     let group = gui.addFolder('Group');
     group.add(params, 'groupOffsetX', -50, 50).onChange(() => throttle(generatePetals, 50));
     group.add(params, 'groupOffsetY', -50, 50).onChange(() => throttle(generatePetals, 50));
+    group.add(params, 'rFactor', -360, 360).onChange(() => throttle(generatePetals, 50));
+    group.add(params, 'rOffset', 0, 20).onChange(() => throttle(generatePetals, 50));
 
 
     petals.open();
@@ -138,9 +141,8 @@
         defs.innerHTML = '';
         document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
 
-
         const maxSaturation = 100;
-        const minSaturation = 50;
+        const minSaturation = 100;
         const maxBrightness = 100;
         const minBrightness = 60;
 
@@ -174,6 +176,7 @@
             // Group Params
             let groupX = j * params.groupOffsetX
             let groupY = j * params.groupOffsetY
+            let rFactor = (j * params.rOffset) * params.rFactor;
 
             let petal = document.createElementNS(svgNS, 'rect');
 
@@ -196,11 +199,11 @@
 
             let stop1 = document.createElementNS(svgNS, 'stop');
             stop1.setAttribute('offset', '0%');
-            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`);
+            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, .1)`);
 
             let stop2 = document.createElementNS(svgNS, 'stop');
             stop2.setAttribute('offset', '100%');
-            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 0.1)`);
+            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 0.5)`);
 
             gradient.appendChild(stop1);
             gradient.appendChild(stop2);
@@ -216,7 +219,7 @@
 
             let petalsGroup = document.createElementNS(svgNS, 'g');
             petalsGroup.setAttribute('class', `petalsGroup`);
-            petalsGroup.setAttribute('transform', `translate(${groupX}, ${groupY})`);
+            petalsGroup.setAttribute('transform', `rotate(${rFactor}, ${(W / 2)}, ${H / 2}) translate(${groupX}, ${groupY} )`);
             petalsGroup.dataset.rotationSpeed = j * params.rOffset;
             svgElement.appendChild(petalsGroup);
 
