@@ -14,386 +14,76 @@
         <svg width="1024" height="1024">
             <rect x="0" y="0" width="100%" height="100%" fill="black" />
 
+            <filter id="blurMe">
+                <feGaussianBlur stdDeviation="50" />
+            </filter>
+
             <defs>
+
+
+                <filter id="filtered-1">
+                    <!-- COLORS -->
+                    <feFlood flood-color="#551C0B" result="COLOR-outline" />
+                    <!-- COLORS END -->
+
+                    <!-- OUTLINE -->
+                    <feMorphology in="SourceAlpha" operator="dilate" radius="5" result="OUTLINE_10" />
+                    <feComposite in="COLOR-outline" operator="in" in2="OUTLINE_10" result="OUTLINE_20" />
+                    <!-- OUTLINE END -->
+
+                    <!-- LIGHTING EFFECTS -->
+                    <feGaussianBlur stdDeviation="8" in="SourceAlpha" result="LIGHTING-EFFECTS-10" />
+                    <feSpecularLighting surfaceScale="9" specularConstant="0.9" specularExponent="10"
+                        lighting-color="#blue" in="LIGHTING-EFFECTS-10" result="LIGHTING-EFFECTS-20">
+                        <fePointLight x="-100" y="-200" z="100" />
+                    </feSpecularLighting>
+                    <feComposite operator="in" in="LIGHTING-EFFECTS-20" in2="SourceAlpha"
+                        result="LIGHTING-EFFECTS-30" />
+                    <feComposite in="SourceGraphic" in2="LIGHTING-EFFECTS-30" operator="arithmetic" k1="0" k2="1" k3="1"
+                        k4="0" result="LIGHTING-EFFECTS-40" />
+                    <!-- LIGHTING EFFECTS END-->
+
+                    <!-- COLOR EFFECTS -->
+                    <feComponentTransfer in="LIGHTING-EFFECTS-40" result="COLOR-EFFECTS_10">
+                        <feFuncR id="RedT" type="table" tableValues="0 6 1 0 3" />
+                        <feFuncG id="GrnT" type="table" tableValues="2 0 1 3 2" />
+                        <feFuncB id="BluT" type="table" tableValues="1 -1 0 1 1" />
+                    </feComponentTransfer>
+
+                    <feColorMatrix type="matrix" values="0.6 0.2 0 -0.3 0,
+            -0.5 1 0 -0.1 0,
+            -0.4 0.5 0.7 0 0,
+            0 0 0 1 0" in="COLOR-EFFECTS_10" result="COLOR-EFFECTS_20" />
+                    <!-- COLOR EFFECTS END-->
+
+                    <feMerge>
+                        <feMergeNode in="OUTLINE_20" />
+                        <feMergeNode in="COLOR-EFFECTS_20" />
+                    </feMerge>
+                </filter>
                 <!-- Petaldynamically added here -->
             </defs>
         </svg>
 
-        <div style="text-align: center; margin-top: 20px;">
-            <button id="prevBtn">Previous</button>
-            <span id="entropyCounter">Entropy: 0/0</span>
-            <button id="nextBtn">Next</button>
+        <div style="display: flex; flex-direction: column; gap:8px">
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="prevBtn">Previous</button>
+                <span id="entropyCounter">Entropy: 0/0</span>
+                <button id="nextBtn">Next</button>
+            </div>
+
+            <div>
+                <input type="file" id="loadInput" style="display: none;" />
+                <button style="background-color: salmon">
+                    <label for="loadInput" id="loadBtn" style="cursor: pointer;">Load Configuration</label>
+                </button>
+                <button style="background-color: darkolivegreen;" id="saveOutputBtn">Save Output</button>
+            </div>
         </div>
-
-        <input type="file" id="loadInput" style="display: none;" />
-        <button>
-
-            <label for="loadInput" id="loadBtn" style="cursor: pointer;">Load Configuration</label>
-        </button>
-
-        <button id="saveOutputBtn">Save Output</button>
-
-
-
     </div>
 </body>
 
-<script>
-    // Global
-    let svgNS = "http://www.w3.org/2000/svg";
-    let svgElement = document.querySelector('svg');
-    let defs = svgElement.querySelector('defs');
-    let W = 1024;
-    let H = 1024;
-
-    // //Petal Vars
-    // let petals = [4, 6, 8, 10, 12, 16, 20, 24, 28, 32][Math.floor(Math.random() * 10)];
-    // let layers = Math.floor(Math.random() * (32 - 4 + 1)) + 8;
-    // let petalWidth = [0.25, 0.5, 1][Math.floor(Math.random() * 3)];
-    // let petalsHeight = [0.25, 0.5, 1][Math.floor(Math.random() * 3)];
-    // let diameter = Math.floor(Math.random() * (200 - 10 + 1)) + 20;
-    // let hueShift = Math.floor(Math.random() * (50 - 5 + 1)) + 10;
-    // let rOffset = 0.0015;
-    // let rSpeed = 0.05;
-    // let layersOffset = Math.floor(Math.random() * (50 - 0.05 + 1)) + 5;
-    // // De 0.3 à 0.7 make sence
-    // let value1 = Math.random() * (0.7 - 0.3) + 0.3;
-    // let value2 = Math.random() * (0.7 - 0.3) + 0.3;
-    // let petalX = W * value1
-    // let petalY = H * value2
-    // let rHue1 = Math.random() * 360;
-    // let rHue2 = Math.random() * 360;
-    // let radiusX = Math.random() * 50 + 0;
-    // let radiusY = Math.random() * 500 + 0;
-    // let offX = [0.01, 0.02, 0.04, 0.06, 0.08][Math.floor(Math.random() * 5)];
-
-    let params = {
-        petals: 10,
-        layers: 8,
-        petalWidth: 0.5,
-        petalsHeight: 0.5,
-        diameter: 480,
-        hueShift: 10,
-        // rOffset: 0.0015,
-        rSpeed: 0.05,
-        layersSize: 1,
-        layersOffsetX: 0,
-        layersOffsetY: 0,
-        petalX: 500,
-        petalY: 500,
-        offsetX: 0,
-        offsetY: 0,
-        rHue1: 180,
-        rHue2: 180,
-        radiusX: 25,
-        radiusY: 250,
-        groupOffsetX: 0,
-        groupOffsetY: 0,
-        rFactor: 0,
-    };
-
-    // Create dat.GUI instance
-    let gui = new dat.GUI();
-
-    let throttleTimer;
-
-    const throttle = (callback, time) => {
-        if (throttleTimer) return;
-
-        throttleTimer = setTimeout(() => {
-            callback();
-            throttleTimer = null;
-        }, time);
-    };
-
-    // Petals    
-    let petals = gui.addFolder('Petals');
-    petals.add(params, 'petals', 1, 32).step(1).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'petalWidth', 0.01, 2).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'petalsHeight', 0.01, 2).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'diameter', 10, 800).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'petalX', 0, 1000).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'petalY', 0, 1000).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'radiusX', 0, 50).onChange(() => throttle(generatePetals, 50));
-    petals.add(params, 'radiusY', 0, 500).onChange(() => throttle(generatePetals, 50));
-
-    // Layers
-    let layers = gui.addFolder('layers');
-    layers.add(params, 'layers', 0, 124).step(1).onChange(() => throttle(generatePetals, 50));
-    layers.add(params, 'layersOffsetX', -200, 200).onChange(() => throttle(generatePetals, 50));
-    layers.add(params, 'layersOffsetY', -200, 200).onChange(() => throttle(generatePetals, 50));
-    layers.add(params, 'layersSize', -200, 200).onChange(() => throttle(generatePetals, 50));
-
-    //Colors
-    let colors = gui.addFolder('Colors');
-    colors.add(params, 'hueShift', 0.1, 50).onChange(() => throttle(generatePetals, 50));
-    colors.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
-    colors.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
-    params.fillPetals = true;
-    gui.add(params, 'fillPetals').name('Fill Petals').onChange(() => throttle(generatePetals, 50));
-
-    // Group
-    let group = gui.addFolder('Group');
-    group.add(params, 'groupOffsetX', -50, 50).onChange(() => throttle(generatePetals, 50));
-    group.add(params, 'groupOffsetY', -50, 50).onChange(() => throttle(generatePetals, 50));
-    group.add(params, 'rFactor', -2000, 2000).onChange(() => throttle(generatePetals, 50));
-    // group.add(params, 'rOffset', 0, 20).onChange(() => throttle(generatePetals, 50));
-
-
-    petals.open();
-    layers.open();
-    colors.open();
-    group.open();
-
-
-    generatePetals();
-
-    function generatePetals() {
-        defs.innerHTML = '';
-        document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
-
-        const maxSaturation = 100;
-        const minSaturation = 100;
-        const maxBrightness = 100;
-        const minBrightness = 60;
-
-        for (let j = params.layers; j > 0; j--) {
-
-            let petalId = `petal${j}`;
-
-            // Colors
-            let hue1 = params.rHue1 + j * params.hueShift;
-            let hue2 = params.rHue2 + j * params.hueShift;
-            let saturation = (minSaturation, maxSaturation - (j * ((maxSaturation - minSaturation) / params.layers)));
-            let brightness = (minBrightness, maxBrightness - (j * ((maxBrightness - minBrightness) / params.layers)));
-
-            // Size
-            let petalX = params.petalX + (params.layersOffsetX * j);
-            let petalY = params.petalY + (params.layersOffsetY * j);
-
-            // let petalW = params.diameter * params.petalWidth;
-            // let petalH = params.diameter * params.petalsHeight;
-            // Size
-            let petalW = (params.diameter * params.petalWidth) + (j * params.layersSize);
-            let petalH = (params.diameter * params.petalsHeight) + (j * params.layersSize);
-
-            // Radius
-            let maxW = 200;
-            let sourceMin = params.diameter;
-            let sourceMax = params.diameter + maxW;
-            let vrx = Math.abs(map(petalW, sourceMin, sourceMax, params.radiusX, params.radiusY));
-            let vry = 0;
-
-            // Group Params
-            let groupX = j * params.groupOffsetX
-            let groupY = j * params.groupOffsetY
-            let rFactor = j * params.rFactor;
-
-            let petal = document.createElementNS(svgNS, 'rect');
-
-            //Petal Position & Size
-            petal.setAttribute('width', `${petalW}`);
-            petal.setAttribute('height', `${petalH}`);
-            petal.setAttribute('x', `${petalX}`); // Use local petalX
-            petal.setAttribute('y', `${petalY}`); // Use local petalY
-            petal.setAttribute('rx', `${vrx}`);
-            // petal.setAttribute('fill', petalColor);
-
-            //Gradient
-            let gradientId = `gradient${j}`;
-            let gradient = document.createElementNS(svgNS, 'linearGradient');
-            gradient.setAttribute('id', gradientId);
-            gradient.setAttribute('x1', '0%');
-            gradient.setAttribute('y1', '0%');
-            gradient.setAttribute('x2', '100%');
-            gradient.setAttribute('y2', '0%');
-
-            let stopOpacity = params.fillPetals ? 0.5 : 0; // Adjust opacity based on checkbox
-            let petalStroke = params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`; // Add stroke if not filled
-            // Apply stroke only if petals are not filled
-            let petalStrokeWidth = params.fillPetals ? 0 : 1; // Stroke width, adjust as needed
-
-            let stop1 = document.createElementNS(svgNS, 'stop');
-            stop1.setAttribute('offset', '0%');
-            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
-            stop1.setAttribute('stop-opacity', stopOpacity);
-
-            let stop2 = document.createElementNS(svgNS, 'stop');
-            stop2.setAttribute('offset', '100%');
-            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%)`);
-            stop2.setAttribute('stop-opacity', stopOpacity);
-
-            // Applying or removing stroke based on fillPetals
-            petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
-            petal.setAttribute('stroke-width', petalStrokeWidth);
-
-
-            gradient.appendChild(stop1);
-            gradient.appendChild(stop2);
-            defs.appendChild(gradient);
-            petal.setAttribute('fill', `url(#${gradientId})`);
-            petal.setAttribute('stroke', `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
-
-            // Filter
-            let filterId = `distortionFilter${j}`;
-            let scale = 20 + j * 5; // Increasing scale for more distortion with each layer
-
-            // Create the filter element
-            let filter = document.createElementNS(svgNS, 'filter');
-            filter.setAttribute('id', filterId);
-
-            // Create feTurbulence and feDisplacementMap elements
-            let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
-            feTurbulence.setAttribute('type', 'turbulence');
-            feTurbulence.setAttribute('baseFrequency', '0.02');
-            feTurbulence.setAttribute('numOctaves', '3');
-            feTurbulence.setAttribute('result', 'turbulence');
-
-            let feDisplacementMap = document.createElementNS(svgNS, 'feDisplacementMap');
-            feDisplacementMap.setAttribute('in2', 'turbulence');
-            feDisplacementMap.setAttribute('in', 'SourceGraphic');
-            feDisplacementMap.setAttribute('scale', scale);
-            feDisplacementMap.setAttribute('xChannelSelector', 'R');
-            feDisplacementMap.setAttribute('yChannelSelector', 'G');
-
-            // Append feTurbulence and feDisplacementMap to the filter
-            filter.appendChild(feTurbulence);
-            filter.appendChild(feDisplacementMap);
-
-            let petalDef = document.createElementNS(svgNS, 'g');
-            petalDef.setAttribute('id', petalId);
-            petalDef.appendChild(petal);
-            defs.appendChild(petalDef);
-
-            let petalsGroup = document.createElementNS(svgNS, 'g');
-            petalsGroup.setAttribute('class', `petalsGroup`);
-            petalsGroup.setAttribute('filter', `url(#${filterId})`);
-
-            petalsGroup.setAttribute('transform', `rotate(${rFactor}, ${(W / 2)}, ${H / 2}) translate(${groupX}, ${groupY} )`);
-            svgElement.appendChild(petalsGroup);
-
-            for (let i = 0; i < params.petals; i++) {
-                let use = document.createElementNS(svgNS, 'use');
-                use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${petalId}`);
-                petalsGroup.appendChild(use);
-            }
-        }
-        move()
-    }
-
-    function move(time) {
-        document.querySelectorAll('.petalsGroup').forEach((group, groupIndex) => {
-            const children = group.children;
-            for (let i = 0; i < children.length; i++) {
-                let rotation = (i * 360 / params.petals);
-                const translateX = 0
-                const translateY = 0
-                children[i].setAttribute('transform', `rotate(${rotation}, ${(W / 2)}, ${H / 2}) translate(${translateX}, ${translateY}) `);
-            }
-        });
-    }
-
-    function map(value, low1, high1, low2, high2) {
-        return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
-    }
-
-    let entropy = 0;
-
-    document.getElementById('nextBtn').addEventListener('click', function () {
-        entropy++;
-        update();
-    });
-
-    document.getElementById('prevBtn').addEventListener('click', function () {
-        entropy = Math.max(0, entropy - 1);
-        update();
-    });
-
-
-    function update() {
-        document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
-        document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
-        document.querySelectorAll('defs > *').forEach(e => e.remove());
-
-        // somewhat emergent lel
-        params.petals = Math.max(2, params.petals + Math.floor((Math.random() - 0.5) * 2 * Math.sqrt(entropy)));
-        params.layers += Math.floor((Math.random() - 0.5) * 2 * Math.log1p(entropy));
-        params.petalWidth *= 1 + (Math.random() - 0.5) * 0.1 * entropy;
-        params.petalsHeight *= 1 + (Math.random() - 0.5) * 0.1 * entropy;
-        params.diameter += (Math.random() - 0.5) * 20 * Math.sin(entropy);
-        params.hueShift += Math.floor((Math.random() - 0.5) * 20);
-        params.rOffset += (Math.random() - 0.5) * 0.002 * entropy;
-        params.rSpeed += (Math.random() - 0.5) * 0.01 * Math.sqrt(entropy);
-        params.layersSize += (Math.random() - 0.5) * Math.log1p(entropy);
-        params.layersOffsetX += (Math.random() - 0.5) * 10 * entropy;
-        params.layersOffsetY += (Math.random() - 0.5) * 10 * entropy;
-
-        params.petalX += (Math.random() - 0.5) * 5;
-        params.petalY += (Math.random() - 0.5) * 5;
-
-        params.offsetX += (Math.random() - 0.5) * 10;
-        params.offsetY += (Math.random() - 0.5) * 10;
-        params.rHue1 += Math.floor((Math.random() - 0.5) * 360 * Math.sin(entropy));
-        params.rHue2 += Math.floor((Math.random() - 0.5) * 360 * Math.cos(entropy));
-        params.radiusX += (Math.random() - 0.5) * 5;
-        params.radiusY += (Math.random() - 0.5) * 50;
-        // params.groupOffsetX += (Math.random() - 0.5) * 20 * Math.tan(entropy);
-        // params.groupOffsetY += (Math.random() - 0.5) * 20 * Math.tan(entropy);
-        params.rFactor += (Math.random() - 0.5) * 360 * Math.sin(entropy);
-
-        // Clamp values to maintain some constraints
-        params.petals = Math.max(1, params.petals);
-        params.layers = Math.max(1, params.layers);
-        params.petalWidth = Math.max(0.1, Math.min(params.petalWidth, 2));
-        params.petalsHeight = Math.max(0.1, Math.min(params.petalsHeight, 2));
-        params.diameter = Math.max(20, Math.min(params.diameter, 800));
-        params.layersSize = Math.max(-200, Math.min(params.layersSize, 200));
-
-        generatePetals();
-    }
-
-    document.getElementById('saveOutputBtn').addEventListener('click', function () {
-        // Save Configuration as JSON
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(params));
-        const configDownloadAnchorNode = document.createElement('a');
-        configDownloadAnchorNode.setAttribute("href", dataStr);
-        configDownloadAnchorNode.setAttribute("download", "configuration.json");
-        document.body.appendChild(configDownloadAnchorNode);
-        configDownloadAnchorNode.click();
-        configDownloadAnchorNode.remove();
-
-        // Delay to ensure the configuration download initiates first
-        setTimeout(() => {
-            // Save SVG as an Image (SVG format here for simplicity)
-            const svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
-            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-            const svgUrl = URL.createObjectURL(svgBlob);
-            const imageDownloadLink = document.createElement('a');
-            imageDownloadLink.href = svgUrl;
-            imageDownloadLink.download = "petals.svg";
-            document.body.appendChild(imageDownloadLink);
-            imageDownloadLink.click();
-            document.body.removeChild(imageDownloadLink);
-        }, 100); // Adjust the delay if needed
-    });
-
-    // Load Configuration
-    document.getElementById('loadInput').addEventListener('change', function (e) {
-        const fileReader = new FileReader();
-        fileReader.onload = function (event) {
-            const loadedParams = JSON.parse(event.target.result);
-            Object.assign(params, loadedParams);
-            for (let key in loadedParams) {
-                if (gui.__controllers.find(c => c.property === key)) {
-                    gui.__controllers.find(c => c.property === key).setValue(loadedParams[key]);
-                }
-            }
-            generatePetals(); // Regenerate petals with new params
-        };
-        fileReader.readAsText(e.target.files[0]);
-    });
-
-
-</script>
+<script src="script.js"></script>
+<script src="ui.js"></script>
 
 </html>
