@@ -107,8 +107,11 @@ function generatePetals() {
         stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%)`);
         stop2.setAttribute('stop-opacity', stopOpacity);
 
-        petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
-        petal.setAttribute('stroke-width', petalStrokeWidth);
+        // petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
+        // petal.setAttribute('stroke-width', petalStrokeWidth);
+
+        petal.setAttribute('stroke', 'black');
+        petal.setAttribute('stroke-width', 10);
 
         gradient.appendChild(stop1);
         gradient.appendChild(stop2);
@@ -140,6 +143,7 @@ function generatePetals() {
     move()
 }
 
+// //filter deform
 function createFilter(j) {
     let scale = 20 + j * 2;
     let baseFrequency = 0.02 + j * 0.05; // Adjusted for a more noticeable effect
@@ -172,6 +176,39 @@ function createFilter(j) {
     return filterId;
 }
 
+//filter blur
+// function createFilter(j) {
+//     let filterId = `dropShadowFilter${j}`;
+//     let filter = document.createElementNS(svgNS, 'filter');
+//     filter.setAttribute('id', filterId);
+//     filter.setAttribute('x', '-50%');
+//     filter.setAttribute('y', '-50%');
+//     filter.setAttribute('width', '200%');
+//     filter.setAttribute('height', '200%');
+
+//     let feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
+//     feGaussianBlur.setAttribute('in', 'SourceAlpha');
+//     feGaussianBlur.setAttribute('stdDeviation', '4');
+//     feGaussianBlur.setAttribute('result', 'blur');
+
+//     let feOffset = document.createElementNS(svgNS, 'feOffset');
+//     feOffset.setAttribute('in', 'blur');
+//     feOffset.setAttribute('dx', '5');
+//     feOffset.setAttribute('dy', '5');
+//     feOffset.setAttribute('result', 'offsetBlur');
+
+//     let feBlend = document.createElementNS(svgNS, 'feBlend');
+//     feBlend.setAttribute('in', 'SourceGraphic');
+//     feBlend.setAttribute('in2', 'offsetBlur');
+//     feBlend.setAttribute('mode', 'normal');
+
+//     filter.appendChild(feGaussianBlur);
+//     filter.appendChild(feOffset);
+//     filter.appendChild(feBlend);
+//     defs.appendChild(filter);
+
+//     return filterId;
+// }
 
 function update() {
     document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
