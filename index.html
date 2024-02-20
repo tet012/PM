@@ -25,6 +25,11 @@
             <button id="nextBtn">Next</button>
         </div>
 
+        <input type="file" id="loadInput" style="display: none;" />
+        <label for="loadInput" id="loadBtn" style="cursor: pointer;">Load Configuration</label>
+        <button id="saveOutputBtn">Save Output</button>
+
+
 
     </div>
 </body>
@@ -65,7 +70,7 @@
         petalsHeight: 0.5,
         diameter: 480,
         hueShift: 10,
-        rOffset: 0.0015,
+        // rOffset: 0.0015,
         rSpeed: 0.05,
         layersSize: 1,
         layersOffsetX: 0,
@@ -120,13 +125,15 @@
     colors.add(params, 'hueShift', 0.1, 50).onChange(() => throttle(generatePetals, 50));
     colors.add(params, 'rHue1', 0, 360).onChange(() => throttle(generatePetals, 50));
     colors.add(params, 'rHue2', 0, 360).onChange(() => throttle(generatePetals, 50));
+    params.fillPetals = true;
+    gui.add(params, 'fillPetals').name('Fill Petals').onChange(() => throttle(generatePetals, 50));
 
     // Group
     let group = gui.addFolder('Group');
     group.add(params, 'groupOffsetX', -50, 50).onChange(() => throttle(generatePetals, 50));
     group.add(params, 'groupOffsetY', -50, 50).onChange(() => throttle(generatePetals, 50));
     group.add(params, 'rFactor', -2000, 2000).onChange(() => throttle(generatePetals, 50));
-    group.add(params, 'rOffset', 0, 20).onChange(() => throttle(generatePetals, 50));
+    // group.add(params, 'rOffset', 0, 20).onChange(() => throttle(generatePetals, 50));
 
 
     petals.open();
@@ -176,7 +183,7 @@
             // Group Params
             let groupX = j * params.groupOffsetX
             let groupY = j * params.groupOffsetY
-            let rFactor = (j * params.rOffset) * params.rFactor;
+            let rFactor = j * params.rFactor;
 
             let petal = document.createElementNS(svgNS, 'rect');
 
@@ -197,18 +204,31 @@
             gradient.setAttribute('x2', '100%');
             gradient.setAttribute('y2', '0%');
 
+            let stopOpacity = params.fillPetals ? 0.5 : 0; // Adjust opacity based on checkbox
+            let petalStroke = params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`; // Add stroke if not filled
+            // Apply stroke only if petals are not filled
+            let petalStrokeWidth = params.fillPetals ? 0 : 1; // Stroke width, adjust as needed
+
             let stop1 = document.createElementNS(svgNS, 'stop');
             stop1.setAttribute('offset', '0%');
-            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%, 1)`);
+            stop1.setAttribute('stop-color', `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
+            stop1.setAttribute('stop-opacity', stopOpacity);
 
             let stop2 = document.createElementNS(svgNS, 'stop');
             stop2.setAttribute('offset', '100%');
-            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%, 1)`);
+            stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%)`);
+            stop2.setAttribute('stop-opacity', stopOpacity);
+
+            // Applying or removing stroke based on fillPetals
+            petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
+            petal.setAttribute('stroke-width', petalStrokeWidth);
+
 
             gradient.appendChild(stop1);
             gradient.appendChild(stop2);
             defs.appendChild(gradient);
             petal.setAttribute('fill', `url(#${gradientId})`);
+            petal.setAttribute('stroke', `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
 
             // Filter
             let filterId = `distortionFilter${j}`;
@@ -246,7 +266,6 @@
             petalsGroup.setAttribute('filter', `url(#${filterId})`);
 
             petalsGroup.setAttribute('transform', `rotate(${rFactor}, ${(W / 2)}, ${H / 2}) translate(${groupX}, ${groupY} )`);
-            petalsGroup.dataset.rotationSpeed = j * params.rOffset;
             svgElement.appendChild(petalsGroup);
 
             for (let i = 0; i < params.petals; i++) {
@@ -292,7 +311,7 @@
         document.querySelectorAll('.petalsGroup').forEach(e => e.remove());
         document.querySelectorAll('defs > *').forEach(e => e.remove());
 
-        // Adjusting parameters for emergent behavior
+        // somewhat emergent lel
         params.petals = Math.max(2, params.petals + Math.floor((Math.random() - 0.5) * 2 * Math.sqrt(entropy)));
         params.layers += Math.floor((Math.random() - 0.5) * 2 * Math.log1p(entropy));
         params.petalWidth *= 1 + (Math.random() - 0.5) * 0.1 * entropy;
@@ -328,6 +347,47 @@
 
         generatePetals();
     }
+
+    document.getElementById('saveOutputBtn').addEventListener('click', function () {
+        // Save Configuration as JSON
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(params));
+        const configDownloadAnchorNode = document.createElement('a');
+        configDownloadAnchorNode.setAttribute("href", dataStr);
+        configDownloadAnchorNode.setAttribute("download", "configuration.json");
+        document.body.appendChild(configDownloadAnchorNode);
+        configDownloadAnchorNode.click();
+        configDownloadAnchorNode.remove();
+
+        // Delay to ensure the configuration download initiates first
+        setTimeout(() => {
+            // Save SVG as an Image (SVG format here for simplicity)
+            const svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            const imageDownloadLink = document.createElement('a');
+            imageDownloadLink.href = svgUrl;
+            imageDownloadLink.download = "petals.svg";
+            document.body.appendChild(imageDownloadLink);
+            imageDownloadLink.click();
+            document.body.removeChild(imageDownloadLink);
+        }, 100); // Adjust the delay if needed
+    });
+
+    // Load Configuration
+    document.getElementById('loadInput').addEventListener('change', function (e) {
+        const fileReader = new FileReader();
+        fileReader.onload = function (event) {
+            const loadedParams = JSON.parse(event.target.result);
+            Object.assign(params, loadedParams);
+            for (let key in loadedParams) {
+                if (gui.__controllers.find(c => c.property === key)) {
+                    gui.__controllers.find(c => c.property === key).setValue(loadedParams[key]);
+                }
+            }
+            generatePetals(); // Regenerate petals with new params
+        };
+        fileReader.readAsText(e.target.files[0]);
+    });
 
 
 </script>
