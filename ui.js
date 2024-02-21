@@ -9,12 +9,14 @@ petals.add(params, 'petalsHeight', 0.01, 2).onChange(generatePetals);
 petals.add(params, 'diameter', 10, 800).onChange(generatePetals);
 petals.add(params, 'petalX', 0, 1000).onChange(generatePetals);
 petals.add(params, 'petalY', 0, 1000).onChange(generatePetals);
-petals.add(params, 'radiusX', 0, 50).onChange(generatePetals);
+petals.add(params, 'radiusX', 0, 500).onChange(generatePetals);
 petals.add(params, 'radiusY', 0, 500).onChange(generatePetals);
+petals.add(params, 'strokeWidth', 0, 50).onChange(generatePetals);
+petals.add(params, 'rectRotation', -180, 180).onChange(generatePetals);
 
 // Layers
 let layers = gui.addFolder('Layers');
-layers.add(params, 'layers', 0, 124).step(1).onChange(generatePetals);
+layers.add(params, 'layers', 0, 500).step(1).onChange(generatePetals);
 layers.add(params, 'layersOffsetX', -200, 200).onChange(generatePetals);
 layers.add(params, 'layersOffsetY', -200, 200).onChange(generatePetals);
 layers.add(params, 'layersSize', -200, 200).onChange(generatePetals);

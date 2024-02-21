@@ -28,6 +28,8 @@ let params = {
     groupOffsetX: 0,
     groupOffsetY: 0,
     rFactor: 0,
+    strokeWidth: 1,
+    rectRotation: 0,
 };
 
 params.fillPetals = true;
@@ -95,7 +97,7 @@ function generatePetals() {
 
         let stopOpacity = params.fillPetals ? 0.5 : 0; // Adjust opacity based on checkbox
         // let petalStroke = params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`; // Add stroke if not filled
-        let petalStrokeWidth = params.fillPetals ? 0 : 1; // Stroke width, adjust as needed
+        // let petalStrokeWidth = params.fillPetals ? 0 : 1; // Stroke width, adjust as needed
 
         let stop1 = document.createElementNS(svgNS, 'stop');
         stop1.setAttribute('offset', '0%');
@@ -107,11 +109,15 @@ function generatePetals() {
         stop2.setAttribute('stop-color', `hsl(${hue2}, ${saturation}%, ${brightness}%)`);
         stop2.setAttribute('stop-opacity', stopOpacity);
 
+        updatedStroke = params.strokeWidth - j * j * 0.1
+
+        console.log(updatedStroke)
+
         // petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
-        // petal.setAttribute('stroke-width', petalStrokeWidth);
+        petal.setAttribute('stroke-width', updatedStroke);
 
         petal.setAttribute('stroke', 'black');
-        petal.setAttribute('stroke-width', 10);
+        // petal.setAttribute('stroke-width', 10);
 
         gradient.appendChild(stop1);
         gradient.appendChild(stop2);
@@ -121,6 +127,13 @@ function generatePetals() {
 
         // Filter
         let filterId = createFilter(j);
+
+        let centerX = petalX + petalW / 2;
+        let centerY = petalY + petalH / 2;
+
+        // Calculate rotation for this petal
+        let petalRotation = j * params.rectRotation;
+        petal.setAttribute('transform', `rotate(${petalRotation}, ${centerX}, ${centerY})`);
 
         let petalDef = document.createElementNS(svgNS, 'g');
         petalDef.setAttribute('id', petalId);
