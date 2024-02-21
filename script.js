@@ -35,7 +35,7 @@ let params = {
 };
 
 params.fillPetals = true;
-params.filterType = 'mozaic';
+params.filterType = 'organic';
 
 
 function generatePetals() {
@@ -204,7 +204,7 @@ function createFilter(j, effectType) {
         filter.appendChild(feGaussianBlur);
         filter.appendChild(feOffset);
         filter.appendChild(feBlend);
-    } else if (effectType === 'mozaic') {
+    } else if (effectType === 'organic') {
         let cellSize = 10 + j;
         let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
         feTurbulence.setAttribute('type', 'turbulence');

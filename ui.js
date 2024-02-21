@@ -37,7 +37,7 @@ group.add(params, 'groupOffsetY', -50, 50).onChange(generatePetals);
 group.add(params, 'rFactor', -8, 8).step(0.1).onChange(generatePetals);
 
 // GUI Parameter for Filter Type
-gui.add(params, 'filterType', ['3d', 'deform', 'mozaic']).name('Filter Type').onChange(generatePetals);
+gui.add(params, 'filterType', ['3d', 'deform', 'organic', 'pixel']).name('Filter Type').onChange(generatePetals);
 
 
 petals.open();
