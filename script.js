@@ -30,10 +30,12 @@ let params = {
     rFactor: 0,
     strokeWidth: 1,
     rectRotation: 0,
+    filter1: 1,
+    filter2: 1,
 };
 
 params.fillPetals = true;
-params.filterType = 'deform';
+params.filterType = 'mozaic';
 
 
 function generatePetals() {
@@ -182,7 +184,7 @@ function createFilter(j, effectType) {
 
         filter.appendChild(feTurbulence);
         filter.appendChild(feDisplacementMap);
-    } else if (effectType === 'blur') {
+    } else if (effectType === '3d') {
         let feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
         feGaussianBlur.setAttribute('in', 'SourceAlpha');
         feGaussianBlur.setAttribute('stdDeviation', '4');
@@ -202,6 +204,54 @@ function createFilter(j, effectType) {
         filter.appendChild(feGaussianBlur);
         filter.appendChild(feOffset);
         filter.appendChild(feBlend);
+    } else if (effectType === 'mozaic') {
+        let cellSize = 10 + j;
+        let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
+        feTurbulence.setAttribute('type', 'turbulence');
+        feTurbulence.setAttribute('baseFrequency', params.filter1 / cellSize);
+        feTurbulence.setAttribute('numOctaves', '1');
+        feTurbulence.setAttribute('result', 'turbulence');
+
+        let feDisplacementMap = document.createElementNS(svgNS, 'feDisplacementMap');
+        feDisplacementMap.setAttribute('in2', 'turbulence');
+        feDisplacementMap.setAttribute('in', 'SourceGraphic');
+        feDisplacementMap.setAttribute('scale', cellSize / params.filter2);
+        feDisplacementMap.setAttribute('xChannelSelector', 'R');
+        feDisplacementMap.setAttribute('yChannelSelector', 'G');
+
+        filter.appendChild(feTurbulence);
+        filter.appendChild(feDisplacementMap);
+    } else if (effectType === 'pixel') {
+        let tileSize = 4;
+        let tileSpacing = 1;
+
+        let feFlood = document.createElementNS(svgNS, 'feFlood');
+        feFlood.setAttribute('x', tileSpacing.toString());
+        feFlood.setAttribute('y', tileSpacing.toString());
+        feFlood.setAttribute('height', tileSize.toString());
+        feFlood.setAttribute('width', tileSize.toString());
+
+        let feComposite = document.createElementNS(svgNS, 'feComposite');
+        feComposite.setAttribute('width', (tileSize * 2).toString());
+        feComposite.setAttribute('height', (tileSize * 2).toString());
+
+        let feTile = document.createElementNS(svgNS, 'feTile');
+        feTile.setAttribute('result', 'a');
+
+        let feComposite2 = document.createElementNS(svgNS, 'feComposite');
+        feComposite2.setAttribute('in', 'SourceGraphic');
+        feComposite2.setAttribute('in2', 'a');
+        feComposite2.setAttribute('operator', 'in');
+
+        let feMorphology = document.createElementNS(svgNS, 'feMorphology');
+        feMorphology.setAttribute('operator', 'dilate');
+        feMorphology.setAttribute('radius', '1');
+
+        filter.appendChild(feFlood);
+        filter.appendChild(feComposite);
+        filter.appendChild(feTile);
+        filter.appendChild(feComposite2);
+        filter.appendChild(feMorphology);
     }
 
     defs.appendChild(filter);
