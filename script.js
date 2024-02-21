@@ -6,7 +6,7 @@ let H = 1024;
 let entropy = 0;
 
 let params = {
-    petals: 10,
+    petals: 4,
     layers: 5,
     petalWidth: 0.5,
     petalsHeight: 0.5,
@@ -17,14 +17,14 @@ let params = {
     layersSize: 5,
     layersOffsetX: 0,
     layersOffsetY: 0,
-    petalX: 500,
+    petalX: 550,
     petalY: 500,
     offsetX: 0,
     offsetY: 0,
     rHue1: 180,
     rHue2: 180,
-    radiusX: 25,
-    radiusY: 250,
+    radiusX: 0,
+    radiusY: 0,
     groupOffsetX: 0,
     groupOffsetY: 0,
     rFactor: 0,
