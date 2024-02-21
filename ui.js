@@ -4,15 +4,15 @@ let gui = new dat.GUI();
 // Petals    
 let petals = gui.addFolder('Petals');
 petals.add(params, 'petals', 1, 32).step(1).onChange(generatePetals);
-petals.add(params, 'petalWidth', 0.01, 2).onChange(generatePetals);
-petals.add(params, 'petalsHeight', 0.01, 2).onChange(generatePetals);
+petals.add(params, 'petalWidth', 0.01, 2).step(0.1).onChange(generatePetals);
+petals.add(params, 'petalsHeight', 0.01, 2).step(0.1).onChange(generatePetals);
 petals.add(params, 'diameter', 10, 800).onChange(generatePetals);
 petals.add(params, 'petalX', 0, 1000).onChange(generatePetals);
 petals.add(params, 'petalY', 0, 1000).onChange(generatePetals);
 petals.add(params, 'radiusX', 0, 500).onChange(generatePetals);
 petals.add(params, 'radiusY', 0, 500).onChange(generatePetals);
 petals.add(params, 'strokeWidth', 0, 50).onChange(generatePetals);
-petals.add(params, 'rectRotation', -180, 180).onChange(generatePetals);
+petals.add(params, 'rectRotation', -180, 180).step(0.1).onChange(generatePetals);
 
 // Layers
 let layers = gui.addFolder('Layers');
@@ -32,7 +32,11 @@ gui.add(params, 'fillPetals').name('Fill Petals').onChange(generatePetals);
 let group = gui.addFolder('Group');
 group.add(params, 'groupOffsetX', -50, 50).onChange(generatePetals);
 group.add(params, 'groupOffsetY', -50, 50).onChange(generatePetals);
-group.add(params, 'rFactor', -2000, 2000).onChange(generatePetals);
+group.add(params, 'rFactor', -8, 8).step(0.1).onChange(generatePetals);
+
+// GUI Parameter for Filter Type
+gui.add(params, 'filterType', ['blur', 'deform']).name('Filter Type').onChange(generatePetals);
+
 
 petals.open();
 layers.open();

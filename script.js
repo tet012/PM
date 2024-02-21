@@ -6,7 +6,7 @@ let H = 1024;
 let entropy = 0;
 
 let params = {
-    petals: 4,
+    petals: 10,
     layers: 5,
     petalWidth: 0.5,
     petalsHeight: 0.5,
@@ -17,7 +17,7 @@ let params = {
     layersSize: 5,
     layersOffsetX: 0,
     layersOffsetY: 0,
-    petalX: 550,
+    petalX: 500,
     petalY: 500,
     offsetX: 0,
     offsetY: 0,
@@ -33,6 +33,7 @@ let params = {
 };
 
 params.fillPetals = true;
+params.filterType = 'deform';
 
 
 function generatePetals() {
@@ -111,11 +112,8 @@ function generatePetals() {
 
         updatedStroke = params.strokeWidth - j * j * 0.1
 
-        console.log(updatedStroke)
-
         // petal.setAttribute('stroke', params.fillPetals ? 'none' : `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
         petal.setAttribute('stroke-width', updatedStroke);
-
         petal.setAttribute('stroke', 'black');
         // petal.setAttribute('stroke-width', 10);
 
@@ -126,7 +124,7 @@ function generatePetals() {
         petal.setAttribute('stroke', `hsl(${hue1}, ${saturation}%, ${brightness}%)`);
 
         // Filter
-        let filterId = createFilter(j);
+        let filterId = createFilter(j, params.filterType);
 
         let centerX = petalX + petalW / 2;
         let centerY = petalY + petalH / 2;
@@ -156,12 +154,8 @@ function generatePetals() {
     move()
 }
 
-// //filter deform
-function createFilter(j) {
-    let scale = 20 + j * 2;
-    let baseFrequency = 0.02 + j * 0.05; // Adjusted for a more noticeable effect
-
-    let filterId = `distortionFilter${j}`;
+function createFilter(j, effectType) {
+    let filterId = `${effectType}Filter${j}`;
     let filter = document.createElementNS(svgNS, 'filter');
     filter.setAttribute('id', filterId);
     filter.setAttribute('x', '-50%');
@@ -169,59 +163,51 @@ function createFilter(j) {
     filter.setAttribute('width', '200%');
     filter.setAttribute('height', '200%');
 
-    let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
-    feTurbulence.setAttribute('type', 'turbulence');
-    feTurbulence.setAttribute('baseFrequency', baseFrequency.toString());
-    feTurbulence.setAttribute('numOctaves', '90');
-    feTurbulence.setAttribute('result', 'turbulence');
+    if (effectType === 'deform') {
+        let scale = 20 + j * 2;
+        let baseFrequency = 0.02 + j * 0.05; // Adjusted for a more noticeable effect
 
-    let feDisplacementMap = document.createElementNS(svgNS, 'feDisplacementMap');
-    feDisplacementMap.setAttribute('in2', 'turbulence');
-    feDisplacementMap.setAttribute('in', 'SourceGraphic');
-    feDisplacementMap.setAttribute('scale', scale.toString());
-    feDisplacementMap.setAttribute('xChannelSelector', 'R');
-    feDisplacementMap.setAttribute('yChannelSelector', 'G');
+        let feTurbulence = document.createElementNS(svgNS, 'feTurbulence');
+        feTurbulence.setAttribute('type', 'turbulence');
+        feTurbulence.setAttribute('baseFrequency', baseFrequency.toString());
+        feTurbulence.setAttribute('numOctaves', '90');
+        feTurbulence.setAttribute('result', 'turbulence');
 
-    filter.appendChild(feTurbulence);
-    filter.appendChild(feDisplacementMap);
+        let feDisplacementMap = document.createElementNS(svgNS, 'feDisplacementMap');
+        feDisplacementMap.setAttribute('in2', 'turbulence');
+        feDisplacementMap.setAttribute('in', 'SourceGraphic');
+        feDisplacementMap.setAttribute('scale', scale.toString());
+        feDisplacementMap.setAttribute('xChannelSelector', 'R');
+        feDisplacementMap.setAttribute('yChannelSelector', 'G');
+
+        filter.appendChild(feTurbulence);
+        filter.appendChild(feDisplacementMap);
+    } else if (effectType === 'blur') {
+        let feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
+        feGaussianBlur.setAttribute('in', 'SourceAlpha');
+        feGaussianBlur.setAttribute('stdDeviation', '4');
+        feGaussianBlur.setAttribute('result', 'blur');
+
+        let feOffset = document.createElementNS(svgNS, 'feOffset');
+        feOffset.setAttribute('in', 'blur');
+        feOffset.setAttribute('dx', '5');
+        feOffset.setAttribute('dy', '5');
+        feOffset.setAttribute('result', 'offsetBlur');
+
+        let feBlend = document.createElementNS(svgNS, 'feBlend');
+        feBlend.setAttribute('in', 'SourceGraphic');
+        feBlend.setAttribute('in2', 'offsetBlur');
+        feBlend.setAttribute('mode', 'normal');
+
+        filter.appendChild(feGaussianBlur);
+        filter.appendChild(feOffset);
+        filter.appendChild(feBlend);
+    }
+
     defs.appendChild(filter);
 
     return filterId;
 }
-
-//filter blur
-// function createFilter(j) {
-//     let filterId = `dropShadowFilter${j}`;
-//     let filter = document.createElementNS(svgNS, 'filter');
-//     filter.setAttribute('id', filterId);
-//     filter.setAttribute('x', '-50%');
-//     filter.setAttribute('y', '-50%');
-//     filter.setAttribute('width', '200%');
-//     filter.setAttribute('height', '200%');
-
-//     let feGaussianBlur = document.createElementNS(svgNS, 'feGaussianBlur');
-//     feGaussianBlur.setAttribute('in', 'SourceAlpha');
-//     feGaussianBlur.setAttribute('stdDeviation', '4');
-//     feGaussianBlur.setAttribute('result', 'blur');
-
-//     let feOffset = document.createElementNS(svgNS, 'feOffset');
-//     feOffset.setAttribute('in', 'blur');
-//     feOffset.setAttribute('dx', '5');
-//     feOffset.setAttribute('dy', '5');
-//     feOffset.setAttribute('result', 'offsetBlur');
-
-//     let feBlend = document.createElementNS(svgNS, 'feBlend');
-//     feBlend.setAttribute('in', 'SourceGraphic');
-//     feBlend.setAttribute('in2', 'offsetBlur');
-//     feBlend.setAttribute('mode', 'normal');
-
-//     filter.appendChild(feGaussianBlur);
-//     filter.appendChild(feOffset);
-//     filter.appendChild(feBlend);
-//     defs.appendChild(filter);
-
-//     return filterId;
-// }
 
 function update() {
     document.getElementById('entropyCounter').innerText = `Entropy: ${entropy}`;
