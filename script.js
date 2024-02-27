@@ -7,6 +7,14 @@ export const params = {
     petalY: 50,
 
     //SHAPE
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 100,
+    z1: 150,
+    z2: 0,
+
+    //RADIUS
     radius_A: 0,
     radius_B: 0,
     radius_C: 0,
@@ -24,6 +32,8 @@ export const params = {
 
     //COLOR
     fill: true,
+    gradientType: 'radial',
+    position: { x: 250, y: 50 },
     gradient_direction: 'down',
     color_shift: 10,
     hue_1: 180,
@@ -38,6 +48,11 @@ export const params = {
     //FX
     blur: 0,
     shadow: 0,
+
+    //PATTERN
+    selectedClass: 'bg_pattern_1',
+    patternColor1: '#e5e5f7',
+    patternColor2: '#444cf7',
 };
 
 export function generatePetals() {
@@ -62,13 +77,13 @@ export function generatePetals() {
             const petal = document.createElement('div');
 
             // SHAPE
-            petal.className = 'petal';
+            // petal.className = `petal ${params.selectedClass}`;
+            petal.classList.add('petal');
+
             petal.style.width = `${width}px`;
             petal.style.height = `${height}px`;
-
             petal.style.marginLeft = `-${width / 2}px`;
             petal.style.marginTop = `-${height / 2}px`;
-
             petal.style.borderRadius = `${params.radius_A}% ${params.radius_B}% ${params.radius_C}% ${params.radius_D}%`;
 
             // FILL & BORDER
@@ -92,12 +107,19 @@ export function generatePetals() {
 
             const updateStroke = params.strokeWidth + 1
             if (params.fill) {
-                petal.style.background = `linear-gradient(${direction}, hsl(${hue_1}, 100%, 50%, ${params.opacity_1}), hsl(${hue_2}, 100%, 50%, ${params.opacity_2}))`;
+                let background;
+                if (params.gradientType === 'linear') {
+                    background = `linear-gradient(${direction}, hsl(${hue_1}, 100%, 50%, ${params.opacity_1}), hsl(${hue_2}, 100%, 50%, ${params.opacity_2}))`;
+                } else if (params.gradientType === 'radial') {
+                    background = `radial-gradient(circle at ${params.position.x}px ${params.position.y}px, hsl(${hue_1}, 100%, 50%, ${params.opacity_1}), hsl(${hue_2}, 100%, 50%, ${params.opacity_2}))`;
+                }
+                petal.style.background = background;
                 petal.style.border = `${params.strokeWidth}px ${params.strokeStyle} hsl(${hue_1}, 100%, 50%)`;
-            } else if (params.fill === false) {
-                petal.style.border = `${updateStroke}px ${params.strokeStyle} hsl(${hue_1}, 100%, 50%)`;
+            } else {
+                petal.style.border = `${params.strokeWidth + 1}px ${params.strokeStyle} hsl(${hue_1}, 100%, 50%)`;
             }
-            petal.style.setProperty('--border-color', `hsl(${hue_1}, 100%, 50%)`);
+
+            petal.style.clipPath = `polygon(${params.x1}% ${params.x2}%, ${params.y1}%  ${params.y2}%,  ${params.z1}%  ${params.z2}%)`;
 
             // EFFECTS
             let blur = (j - 1) * params.blur;
@@ -116,3 +138,5 @@ export function generatePetals() {
 }
 
 generatePetals();
+
+

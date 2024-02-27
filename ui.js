@@ -16,16 +16,24 @@ petals.addBlade({
 petals.addBinding(params, 'petalX', { min: -1000, max: 1000 }).on('change', generatePetals);
 petals.addBinding(params, 'petalY', { min: -1000, max: 1000 }).on('change', generatePetals);
 
+const path = pane.addFolder({ title: 'Path' });
+path.addBinding(params, 'x1', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+path.addBinding(params, 'x2', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+path.addBinding(params, 'y1', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+path.addBinding(params, 'y2', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+path.addBinding(params, 'z1', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+path.addBinding(params, 'z2', { min: 0, max: 150, step: 0.1 }).on('change', generatePetals);
+
 const shapes = pane.addTab({
     pages: [
-        { title: 'Presets' },
+        { title: 'roundness' },
         { title: 'Advanced' },
 
     ],
 });
 
 // SHAPES
-const presets = shapes.pages[0];
+const roundness = shapes.pages[0];
 const applyPreset = {
     'Round': () => {
         params.radius_A = 100;
@@ -53,7 +61,7 @@ const applyPreset = {
     }
 };
 
-presets.addBlade({
+roundness.addBlade({
     view: 'list',
     label: 'Shape',
     options: [
@@ -99,9 +107,25 @@ rotation.addBinding(params, 'rotation', { min: -8, max: 8, step: 0.1 }).on('chan
 // FILL
 const fill = pane.addFolder({ title: 'Fill' });
 
-
 fill.addBinding(params, 'fill', { label: 'Fill' }).on('change', generatePetals);
 fill.addBlade({ view: 'separator' });
+
+fill.addBinding(params, 'gradientType', {
+    label: 'Type',
+    options: {
+        Linear: 'linear',
+        Radial: 'radial'
+    },
+}).on('change', () => {
+    generatePetals();
+});
+
+fill.addBinding(params, 'position', {
+    picker: 'inline',
+    expanded: false,
+}).on('change', () => {
+    generatePetals();
+});
 
 fill.addBinding(params, 'gradient_direction', {
     label: 'Direction',
@@ -112,6 +136,7 @@ fill.addBinding(params, 'gradient_direction', {
         Left: 'left',
     },
 }).on('change', (value) => { generatePetals(); });
+
 fill.addBlade({ view: 'separator' });
 
 fill.addBinding(params, 'color_shift', { min: 0.1, max: 50 }).on('change', generatePetals);
@@ -138,8 +163,34 @@ border.addBinding(params, 'strokeStyle', {
         Outset: 'outset',
     },
 }).on('change', (value) => {
-    generatePetals(); // Regenerate petals to apply the new stroke style
+    generatePetals();
 });
+
+// const pattern = pane.addFolder({ title: 'Pattern' });
+// pattern.addBinding(params, 'selectedClass', {
+//     label: 'Pattern Style',
+//     options: {
+//         'Pattern 1': 'bg_pattern_1',
+//         'Pattern 2': 'bg_pattern_2',
+//     },
+// }).on('change', (value) => {
+//     document.querySelectorAll('.petal').forEach((petalElement) => {
+//         petalElement.classList.remove('bg_pattern_1', 'bg_pattern_2');
+//         petalElement.classList.add(value);
+//     });
+// });
+
+// pattern.addBinding(params, 'patternColor1', {
+//     label: 'Color 1',
+// }).on('change', (value) => {
+//     document.documentElement.style.setProperty('--pattern-color-1', value);
+// });
+
+// pattern.addBinding(params, 'patternColor2', {
+//     label: 'Color 2',
+// }).on('change', (value) => {
+//     document.documentElement.style.setProperty('--pattern-color-2', value);
+// });
 
 const effect = pane.addFolder({ title: 'Effect' });
 effect.addBinding(params, 'blur', { min: 0, max: 2, step: 0.01 }).on('change', generatePetals);
