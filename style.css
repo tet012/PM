@@ -4,14 +4,28 @@
   height: 1024px;
   overflow: hidden;
   background-color: antiquewhite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* background-image: repeating-radial-gradient(
+    circle,
+    black,
+    black 20px,
+    white 20px,
+    white 40px
+  ); */
 }
 
 .petal {
   position: absolute;
-  box-sizing: content-box;
   left: 50%;
   top: 50%;
-  /* border: var(--stroke-width) solid var(--border-color); */
+  border: solid 1px black;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .group {
@@ -19,4 +33,8 @@
   width: 100%;
   height: 100%;
   transform-origin: center;
+}
+
+.tp-fldv_c {
+  padding: 4px;
 }
