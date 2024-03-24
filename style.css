@@ -3,7 +3,7 @@
   width: 1024px;
   height: 1024px;
   overflow: hidden;
-  background-color: antiquewhite;
+  background-color: black;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -21,11 +21,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  border: solid 1px black;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow: visible;
 }
 
 .group {

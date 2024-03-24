@@ -37,8 +37,8 @@ export const params = {
     hue_2: 360,
     // opacity_1: 0.25,
     // opacity_2: 0.25,
-    opacity_1: 0.7,
-    opacity_2: 0.7,
+    opacity_1: 0.3,
+    opacity_2: 0.3,
     light_1: 75,
     light_2: 75,
     sat_1: 100,
@@ -60,7 +60,7 @@ export const params = {
     strokeStyle: 'solid',
 
     //FX
-    blur: 0,
+    blur: 10,
     shadow: 10,
 };
 
@@ -94,16 +94,23 @@ export function generatePetals() {
     const baseHue_2 = Math.random() * 360;
     const baseShift = Math.random() * 50
 
-    const baseScale = Math.random() * 16;
+    // const baseScale = Math.random() * 16;
+
+    const baseScale = 0.1;
+
     const baseWidth = Math.floor(Math.random() * 500) + 100;
     const baseHeight = Math.floor(Math.random() * 500) + 100;
 
     const angle = Math.floor(Math.random() * 361) - 180;
     const op_1 = Math.random();
     const op_2 = Math.random();
+    // const op_1 = 0.3
+    // const op_2 = 0.3
 
-    const px = Math.floor(Math.random() * 201) - 100;
-    const py = Math.floor(Math.random() * 201) - 100;
+    // const px = Math.floor(Math.random() * 201) - 100;
+    // const py = Math.floor(Math.random() * 201) - 100;
+    const px = 40
+    const py = 40
 
     for (let j = 1; j <= layersNumbr; j++) {
         const group = document.createElement('div');
@@ -134,9 +141,7 @@ export function generatePetals() {
             petal.style.height = `${height}px`;
             petal.style.marginLeft = `-${width / 2}px`;
             petal.style.marginTop = `-${height / 2}px`;
-            petal.style.borderRadius =
-                `${r_a1}% ${r_b1}% ${r_a2}% ${r_b2}% / 
-            ${r_a3}% ${r_b3}% ${r_a4}% ${r_b4}%`;
+            petal.style.borderRadius = `${r_a1}% ${r_b1}% ${r_a2}% ${r_b2}% / ${r_a3}% ${r_b3}% ${r_a4}% ${r_b4}%`;
 
             petal_gradient.style.width = `${i_width}px`;
             petal_gradient.style.height = `${i_height}px`;
@@ -160,32 +165,33 @@ export function generatePetals() {
                 // petal_gradient.style.backgroundPosition = `right top, left bottom`; // Example positions
                 // petal_gradient.style.backgroundSize = `auto, 100%`; // Adjust size as needed
 
-                // petal.style.backdropFilter = 'blur(5px)';
+                petal.style.backdropFilter = 'blur(10px)';
                 // petal_gradient.style.filter = `backdrop( blur(80px) )`;
                 petal_gradient.style.backgroundPosition = `${params.position.x}px ${params.position.y}px`;
                 // petal_gradient.style.transform = `rotate(${reverseAngle}deg)`;
             }
 
-            const blur = (j - 1) * params.blur;
+            const blur = (j - 1) * 0.25
             const shadowBlur = params.shadow;
+
+            group.style.filter = `blur(${blur}px)`;
 
             petal_inner_shadow.style.width = `${width}px`;
             petal_inner_shadow.style.height = `${height}px`;
             petal_inner_shadow.style.position = 'absolute';
             petal_inner_shadow.style.zIndex = '100';
             // petal_inner_shadow.style.borderRadius = `${params.radius_A}% ${params.radius_B}% ${params.radius_C}% ${params.radius_D}%`;
-            petal_inner_shadow.style.boxShadow = `
-            inset 0px 0px 128px hsla(0, 0%, 0%, 0.1),
-            inset 0px 0px 64px hsla(0, 0%, 0%, 0.3),
-            inset 0px 0px 32px -8px hsla(0, 0%, 0%, 0.5),
-            inset 0px 0px 8px -4px hsla(0, 0%, 0%, 1)`;
-
             // petal_inner_shadow.style.boxShadow = `
-            // 0px 0px 128px -32px hsla(0, 0%, 0%, 0.1), 
-            // inset -16px 16px 64px -24px hsla(0, 0%, 0%, 0.5)`,
+            // inset 0px 0px 128px hsla(0, 0%, 0%, 0.1),
+            // inset 0px 0px 64px hsla(0, 0%, 0%, 0.3),
+            // inset 0px 0px 32px -8px hsla(0, 0%, 0%, 0.5),
+            // inset 0px 0px 8px -4px hsla(0, 0%, 0%, 1)`;
 
-            petal.style.filter = `blur(${blur}px)`;
-            petal.style.transform = `rotate(${rotationPerPetal}deg) translate(${px}%, ${py}%)`;
+            petal_inner_shadow.style.boxShadow = `
+            0px 0px 128px -32px hsla(0, 0%, 0%, 0.1), 
+            inset -16px 16px 64px hsla(0, 0%, 0%, 1)`,
+
+                petal.style.transform = `rotate(${rotationPerPetal}deg) translate(${px}%, ${py}%)`;
             petal.style.clipPath = `polygon(${a1}% ${b1}%, ${a2}% ${b2}%, ${a3}% ${b3}%, ${a4}% ${b4}%)`;
 
             // petal_gradient.style.transform = `rotate(${rotationPerPetal}deg) `;
