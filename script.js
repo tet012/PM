@@ -35,7 +35,7 @@ function animate() {
     const phaseShift = Math.random() * 1;
     const flowField = flowfield(W, H, resolution, phaseShift, scaleFactor, frequency);
     const totalFlowers = Math.random() * 3 + 1;
-    h_factor = 100
+    h_factor = 50
     const angleType = R.random_choice(['straight', 'curvy', 'random']);
 
     for (let f = 0; f < totalFlowers; f++) {
