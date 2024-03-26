@@ -104,6 +104,7 @@ class Flower {
         const [coreX, coreY] = points[points.length - 1];
         const scaleFactor = Math.pow(0.7, depth);
         const scaledCoreRadius = coreRadius * scaleFactor;
+        ctx.save();
         ctx.beginPath();
         for (let i = 0; i <= numPoints; i++) {
             const angle = (i / numPoints) * 2 * Math.PI;
@@ -116,7 +117,11 @@ class Flower {
         }
         ctx.closePath();
         ctx.fillStyle = core_color;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = scaledCoreRadius * 0.4;
+        ctx.shadowOffsetY = scaledCoreRadius * 0.2;
         ctx.fill();
+        ctx.restore();
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'black';
         ctx.stroke();
@@ -139,10 +144,15 @@ class Flower {
         const [petalX, petalY] = [points[points.length - 1][0] + Math.cos(angle) * coreRadius * 1.5, points[points.length - 1][1] + Math.sin(angle) * coreRadius * 1.5];
         const noiseValue = perlin.noise(petalX * 0.05, petalY * 0.05);
         const n = Math.abs((noiseValue - 0.5) * 2) * scaleFactor;
+        ctx.save();
         ctx.beginPath();
         ctx.ellipse(petalX + n, petalY + n, petalLength, petalWidth, angle, 0, 2 * Math.PI);
         ctx.fillStyle = flower_color;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = petalWidth * 0.4;
+        ctx.shadowOffsetY = petalWidth * 0.2;
         ctx.fill();
+        ctx.restore();
         this.drawPetalStroke(petalX + n, petalY + n, petalLength, petalWidth, angle, scaleFactor);
     }
 
@@ -159,6 +169,22 @@ class Flower {
         ctx.strokeStyle = 'black';
         ctx.lineWidth = scaleFactor;
         ctx.stroke();
+    }
+
+    drawShadowEllipse() {
+        const { coreRadius, points } = this;
+        const [centerX, centerY] = points[points.length - 1];
+        const shadowEllipseRadius = coreRadius * 1.5;
+        const shadowOffsetY = coreRadius * 0.5;
+        const shadowBlur = coreRadius * 0.7;
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY - shadowOffsetY, shadowEllipseRadius, shadowEllipseRadius * 0.6, 0, 0, 2 * Math.PI);
+        ctx.shadowColor = 'rgba(0, 0, 0, 1)';
+        ctx.shadowBlur = shadowBlur;
+        ctx.shadowOffsetY = shadowOffsetY;
+        ctx.fill();
+        ctx.restore();
     }
 
     draw() {
