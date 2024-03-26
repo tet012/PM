@@ -37,7 +37,7 @@ function animate() {
     const flowField = flowfield(W, H, resolution, noiseScale, noiseStrength, angleOffset);
 
     const totalFlowers = Math.random() * 3 + 1;
-    h_factor = 5;
+    h_factor = Math.floor(Math.random() * 50) + 1;
 
     const angleType = R.random_choice(['straight', 'curvy', 'random']);
     for (let f = 0; f < totalFlowers; f++) {
