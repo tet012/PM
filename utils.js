@@ -6,7 +6,6 @@ function R_Col(colorsArray) {
     return R.random_choice(colorsArray);
 }
 
-
 function colorWithOpacity(hslColor, opacity) {
     let values = hslColor.match(/\d+/g);
     if (!values || values.length !== 3) {
@@ -88,7 +87,6 @@ function chaikinSmooth(arr, num) {
     if (num === 0) return arr;
     const l = arr.length;
     const smooth = [arr[0]];
-
     for (let i = 0; i < l - 1; i++) {
         const c = arr[i];
         const next = arr[i + 1];
@@ -101,37 +99,17 @@ function chaikinSmooth(arr, num) {
     return num === 1 ? smooth : chaikinSmooth(smooth, num - 1);
 }
 
-// function flowfield(width, height, resolution, phaseShift, scaleFactor, frequency) {
-//     let cols = Math.floor(width / resolution);
-//     let rows = Math.floor(height / resolution);
-//     let field = new Array(rows);
-
-//     for (let y = 0; y < rows; y++) {
-//         field[y] = new Array(cols);
-//         for (let x = 0; x < cols; x++) {
-//             // Simulate a noise-based approach with trigonometry for variability
-//             let angle = Math.cos((x + phaseShift) * frequency * scaleFactor) +
-//                 Math.sin((y + phaseShift) * frequency * scaleFactor);
-//             field[y][x] = angle;
-//         }
-//     }
-//     return field;
-// }
-
-
-function flowfield(width, height, resolution, phaseShift = 0, scaleFactor = 1, frequency = 0.1) {
-    let cols = Math.floor(width / resolution);
-    let rows = Math.floor(height / resolution);
-    let field = new Array(rows);
-
+function flowfield(width, height, resolution, noiseScale, noiseStrength, angleOffset, startY) {
+    const cols = Math.floor(width / resolution);
+    const rows = Math.floor((height - H * 0.1) / resolution) + 1;
+    const field = new Array(rows);
     for (let y = 0; y < rows; y++) {
         field[y] = new Array(cols);
         for (let x = 0; x < cols; x++) {
-            let angle = Math.cos((x + phaseShift) * frequency * scaleFactor) +
-                Math.sin((y + phaseShift) * frequency * scaleFactor);
-
-            const upwardBias = Math.PI / 1.1;
-            angle = lerp(upwardBias, angle, 0.5);
+            const noiseX = (x + 0.5) * noiseScale;
+            const noiseY = (y + startY / resolution + 0.5) * noiseScale;
+            const noiseValue = perlin.noise(noiseX, noiseY);
+            const angle = noiseValue * Math.PI * 2 * noiseStrength + angleOffset;
             field[y][x] = angle;
         }
     }
@@ -180,3 +158,72 @@ class Perlin {
     }
 }
 
+const basicSimplex = (frequency) => {
+    return (x, y) => {
+        if (frequency === 0) return 0;
+        return perlin.noise(x * frequency, y * frequency);
+    };
+};
+
+const randomNumberBetweenSq = (min, max) => {
+    return Math.pow(Math.random(), 2) * (max - min) + min;
+};
+
+const randomNumberBetween = (min, max) => {
+    return Math.random() * (max - min) + min;
+};
+
+const snapNumber = (snapSize, num) => {
+    return Math.round(num / snapSize) * snapSize;
+};
+
+const drawLine = (ctx, x1, y1, x2, y2, options = {}) => {
+    const {
+        stepsBetweenPoints = 10,
+        density = 5,
+        minThickness = 0.1,
+        maxThickness = 2,
+        minRadius = 0.25,
+        maxRadius = 1,
+        noiseFrequency = 0,
+        snapPointsPx = 3,
+        snapPoinstPct = 0.7,
+    } = options;
+
+    const xIncrement = (x2 - x1) / stepsBetweenPoints;
+    const yIncrement = (y2 - y1) / stepsBetweenPoints;
+    let currentX = x1;
+    let currentY = y1;
+
+    const noiseFn = basicSimplex(noiseFrequency);
+
+    const randomCirclesAroundPoint = (centerX, centerY, thickness, density) => {
+        for (let i = 0; i < density; i++) {
+            const rndRadius = randomNumberBetweenSq(0, thickness);
+            const rndRadians = randomNumberBetween(0, Math.PI * 2);
+            let x = centerX + rndRadius * Math.cos(rndRadians);
+            let y = centerY + rndRadius * Math.sin(rndRadians);
+            const pointRadius = randomNumberBetween(minRadius, maxRadius);
+            if (snapPoinstPct && snapPoinstPct < 1) {
+                if (randomNumberBetween(0, 1) > snapPoinstPct) x = snapNumber(snapPointsPx, x);
+                if (randomNumberBetween(0, 1) > snapPoinstPct) y = snapNumber(snapPointsPx, y);
+            }
+            ctx.beginPath();
+            ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    };
+
+    for (let i = 0; i < stepsBetweenPoints; i++) {
+        let rad;
+        if (noiseFrequency) {
+            rad = (Math.abs(noiseFn(currentX, currentY)) + minThickness) * maxThickness;
+        } else {
+            rad = randomNumberBetween(minThickness, maxThickness);
+        }
+        const thickness = rad;
+        randomCirclesAroundPoint(currentX, currentY, thickness, density);
+        currentX += xIncrement;
+        currentY += yIncrement;
+    }
+};
