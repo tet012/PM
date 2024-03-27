@@ -329,7 +329,7 @@ class Flower {
         const [coreX, coreY] = points[points.length - 1];
         const scaleFactor = Math.pow(0.7, depth);
         const scaledCoreRadius = coreRadius * scaleFactor;
-        const numParticles = R.random_int(5, 15);
+        const numParticles = R.random_int(5, 50);
         for (let i = 0; i < numParticles; i++) {
             const particleRadius = scaledCoreRadius * R.random_num(0.05, 0.15);
             const particleResolution = 0.1;
@@ -348,7 +348,7 @@ class Flower {
                 ctx[j === 0 ? 'moveTo' : 'lineTo'](x, y);
             }
             ctx.closePath();
-            ctx.fillStyle = R.random_bool(0.7) ? fc_1 : fc_2; ctx.fill();
+            ctx.fillStyle = R.random_bool(0.7) ? O_col(fc_1, R.random_num(0.3, 0.8)) : O_col(fc_2, R.random_num(0.3, 0.8)); ctx.fill();
         }
     }
 

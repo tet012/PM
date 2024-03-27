@@ -106,11 +106,17 @@ function drawSun(x, y, radius) {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
-    for (let i = 0; i < 3; i++) {
+    const sun_circle = R.random_bool(0.5);
+
+    for (let i = 0; i < 6; i++) {
         ctx.beginPath();
-        ctx.arc(x, y, radius * i / 5, 0, 2 * Math.PI);
-        sc_1 = 0.9 - i / 20;
-        sc_2 = 0.6 - i / 20;
+        if (sun_circle) {
+            ctx.arc(x, y, radius * i / 5, 0, 2 * Math.PI);
+        } else {
+            ctx.fillRect(x - radius * i / 10, y - radius * i / 10, radius * i / 5, radius * i / 5);
+        }
+        sc_1 = 0.9 - i * 0.2;
+        sc_2 = 0.6 - i * 0.2;
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
         gradient.addColorStop(0, `rgba(255, 255, 0, ${sc_1}`);
         gradient.addColorStop(1, `rgba(255, 255, 0, ${sc_2}`);
