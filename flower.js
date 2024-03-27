@@ -14,7 +14,7 @@ class Flower {
         let [lastX, lastY] = [this.x, this.y];
         for (let i = 0; i < this.p; i++) {
             const { nextX, nextY } = this.getNextPoint(lastX, lastY, i);
-            if (nextY < canvas.height * R.random_num(0.1, 0.3)) break;
+            if (nextY < canvas.height * 0.1) break;
             points.push([nextX, nextY]);
             [lastX, lastY] = [nextX, nextY];
             this.attemptBranching(lastX, lastY, i, points);
@@ -28,7 +28,6 @@ class Flower {
         const h_variation = (R.random_num(0, 1) - 0.5) * h_factor;
         let nextX = x + Math.cos(angle) * 10 + h_variation;
         let nextY = this.calculateNextY(y, index, angle);
-
         nextX = Math.max(0, Math.min(nextX, canvas.width));
         nextY = Math.max(0, Math.min(nextY, canvas.height));
 
@@ -59,7 +58,7 @@ class Flower {
     }
 
     attemptBranching(x, y, index, points) {
-        const { depth, maxDepth, p, h_factor, smooth_factor, flowField, resolution, index: flowerIndex, totalFlowers, patternType, flower_color, core_color } = this;
+        const { depth, maxDepth, p, h_factor, smooth_factor, flowField, resolution, index: flowerIndex, totalFlowers, patternType, core_color } = this;
         if (R.random_bool(0.5) && depth < maxDepth) {
             const angle = points.length > 1 && index > 0 ? Math.atan2(y - points[index - 1][1], x - points[index - 1][0]) : 0;
             const branchAngle = angle + (R.random_num(0.4, 0.8));
@@ -80,7 +79,7 @@ class Flower {
     }
 
     drawStem() {
-        const { points, smooth_factor, depth } = this;
+        const { points, smooth_factor, depth, fc_1, fc_2 } = this;
         const smoothedPoints = chaikinSmooth(points, smooth_factor);
         const frequency = 0.0085;
         const amplitude = 4;
@@ -94,7 +93,20 @@ class Flower {
             ctx.moveTo(...start);
             ctx.lineTo(...end);
             ctx.lineWidth = strokeWidth;
-            ctx.strokeStyle = 'black';
+
+            if (striped_stem) {
+                if (R.random_bool(0.5)) {
+                    ctx.strokeStyle = fc_1;
+                } else {
+                    if (R.random_bool(0.75)) {
+                        ctx.strokeStyle = 'black';
+                    } else {
+                        ctx.strokeStyle = fc_2;
+                    }
+                }
+            } else {
+                ctx.strokeStyle = 'black';
+            }
             ctx.stroke();
         }
     }
@@ -128,6 +140,23 @@ class Flower {
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'black';
         ctx.stroke();
+
+        const ellipseRadius = scaledCoreRadius * R.random_num(0.15, 0.3);
+        const ellipseResolution = 0.05;
+        const ellipseScale = ellipseRadius * 0.2;
+        ctx.beginPath();
+        for (let j = 0; j <= numPoints; j++) {
+            const angle = (j / numPoints) * 2 * Math.PI;
+            const [baseX, baseY] = [coreX + ellipseRadius * Math.cos(angle), coreY + ellipseRadius * Math.sin(angle)];
+            const noiseValue = perlin.noise(baseX * ellipseResolution, baseY * ellipseResolution);
+            const n = (noiseValue - 0.5) * ellipseScale;
+            const adjustedRadius = ellipseRadius + n;
+            const [x, y] = [coreX + adjustedRadius * Math.cos(angle), coreY + adjustedRadius * Math.sin(angle)];
+            ctx[j === 0 ? 'moveTo' : 'lineTo'](x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fill();
     }
 
     drawPetals() {
@@ -148,18 +177,44 @@ class Flower {
         const noiseValue = perlin.noise(petalX * 0.05, petalY * 0.05);
         const n = Math.abs((noiseValue - 0.5) * 2) * scaleFactor;
 
+        // this.drawPetalStroke(petalX + n, petalY + n, petalLength, petalWidth, angle, scaleFactor);
+
         ctx.save();
         ctx.translate(petalX + n, petalY + n);
         ctx.rotate(angle);
-
         ctx.beginPath();
-
         if (mode === 1) {
-            ctx.ellipse(0, 0, petalLength, petalWidth, 0, 0, 2 * Math.PI);
+            const numPoints = 100;
+            const resolution = ellipse_resolution;
+            const scale = petalWidth * 0.1;
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
+                const angle = t * 2 * Math.PI;
+                const x = petalLength * Math.cos(angle);
+                const y = petalWidth * Math.sin(angle);
+                const noiseValue = perlin.noise(x * resolution, y * resolution);
+                const n = (noiseValue - 0.5) * scale;
+                ctx[i === 0 ? 'moveTo' : 'lineTo'](x + n, y + n);
+            }
         } else if (mode === 2) {
-            ctx.rect(-petalLength, -petalWidth / 2, petalLength * 2, petalWidth);
+            const numPoints = 4;
+            const points = [
+                [-petalLength, -petalWidth / 2],
+                [petalLength, -petalWidth / 2],
+                [petalLength, petalWidth / 2],
+                [-petalLength, petalWidth / 2]
+            ];
+            const resolution = ellipse_resolution;
+            const scale = petalWidth * 0.1;
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < numPoints; i++) {
+                const [x, y] = points[i];
+                const noiseValue = perlin.noise(x * resolution, y * resolution);
+                const n = (noiseValue - 0.5) * scale;
+                ctx.lineTo(x + n, y + n);
+            }
+            ctx.closePath();
         } else {
-            const numSides = R.random_int(3, 6);
             const angleStep = (Math.PI * 2) / numSides;
             ctx.moveTo(petalLength, 0);
             for (let i = 1; i < numSides; i++) {
@@ -169,17 +224,15 @@ class Flower {
             }
             ctx.closePath();
         }
-
         const flower_gradient = ctx.createLinearGradient(-petalLength, 0, petalLength, 0);
-        flower_gradient.addColorStop(0, fc_1);
-        flower_gradient.addColorStop(1, fc_2);
+        flower_gradient.addColorStop(fs_1, fc_1);
+        flower_gradient.addColorStop(fs_2, fc_2);
         ctx.fillStyle = flower_gradient;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
         ctx.shadowBlur = petalWidth * 0.4;
         ctx.shadowOffsetY = petalWidth * 0.2;
         ctx.fill();
         ctx.restore();
-
         this.drawPetalStroke(petalX + n, petalY + n, petalLength, petalWidth, angle, scaleFactor);
     }
 
@@ -198,11 +251,37 @@ class Flower {
 
         ctx.beginPath();
         if (mode === 1) {
-            ctx.ellipse(0, 0, petalLength, petalWidth, 0, 0, 2 * Math.PI);
+            const numPoints = 100;
+            const resolution = ellipse_resolution;
+            const scale = petalWidth * 0.1;
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
+                const angle = t * 2 * Math.PI;
+                const x = petalLength * Math.cos(angle);
+                const y = petalWidth * Math.sin(angle);
+                const noiseValue = perlin.noise(x * resolution, y * resolution);
+                const n = (noiseValue - 0.5) * scale;
+                ctx[i === 0 ? 'moveTo' : 'lineTo'](x + n, y + n);
+            }
         } else if (mode === 2) {
-            ctx.rect(-petalLength, -petalWidth / 2, petalLength * 2, petalWidth);
+            const numPoints = 4;
+            const points = [
+                [-petalLength, -petalWidth / 2],
+                [petalLength, -petalWidth / 2],
+                [petalLength, petalWidth / 2],
+                [-petalLength, petalWidth / 2]
+            ];
+            const resolution = ellipse_resolution;
+            const scale = petalWidth * 0.1;
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < numPoints; i++) {
+                const [x, y] = points[i];
+                const noiseValue = perlin.noise(x * resolution, y * resolution);
+                const n = (noiseValue - 0.5) * scale;
+                ctx.lineTo(x + n, y + n);
+            }
+            ctx.closePath();
         } else {
-            const numSides = R.random_int(3, 6);
             const angleStep = (Math.PI * 2) / numSides;
             ctx.moveTo(petalLength, 0);
             for (let i = 1; i < numSides; i++) {
@@ -220,6 +299,34 @@ class Flower {
         ctx.stroke();
     }
 
+    drawParticles() {
+        const { coreRadius, points, depth, fc_1, fc_2 } = this;
+        const [coreX, coreY] = points[points.length - 1];
+        const scaleFactor = Math.pow(0.7, depth);
+        const scaledCoreRadius = coreRadius * scaleFactor;
+        const numParticles = R.random_int(5, 15);
+        for (let i = 0; i < numParticles; i++) {
+            const particleRadius = scaledCoreRadius * R.random_num(0.05, 0.15);
+            const particleResolution = 0.1;
+            const particleScale = particleRadius * 0.5;
+            const angle = R.random_num(0, 2 * Math.PI);
+            const distance = scaledCoreRadius * R.random_num(1.2, 5);
+            const [particleX, particleY] = [coreX + distance * Math.cos(angle), coreY + distance * Math.sin(angle)];
+            ctx.beginPath();
+            for (let j = 0; j <= 50; j++) {
+                const angle = (j / 50) * 2 * Math.PI;
+                const [baseX, baseY] = [particleX + particleRadius * Math.cos(angle), particleY + particleRadius * Math.sin(angle)];
+                const noiseValue = perlin.noise(baseX * particleResolution, baseY * particleResolution);
+                const n = (noiseValue - 0.5) * particleScale;
+                const adjustedRadius = particleRadius + n;
+                const [x, y] = [particleX + adjustedRadius * Math.cos(angle), particleY + adjustedRadius * Math.sin(angle)];
+                ctx[j === 0 ? 'moveTo' : 'lineTo'](x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = R.random_bool(0.7) ? fc_1 : fc_2; ctx.fill();
+        }
+    }
+
     draw() {
         this.drawStem();
         this.branches.forEach(branch => {
@@ -228,6 +335,8 @@ class Flower {
         if (this.hasFlower) {
             this.drawPetals();
             this.drawCore();
+            this.drawParticles(); // B. Draw particles around the flower head
+
         }
     }
 }
