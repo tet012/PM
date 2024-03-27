@@ -4,7 +4,7 @@ class Flower {
     constructor(x, y, p, h_factor, smooth_factor, flowField, resolution, index, totalFlowers, patternType, fc_1, fc_2, core_color, depth = 0, maxDepth = 2, parentAngle = null, hasFlower = true) {
         Object.assign(this, { x, y, p, h_factor, smooth_factor, flowField, resolution, index, totalFlowers, patternType, fc_1, fc_2, core_color, depth, maxDepth, parentAngle, hasFlower });
 
-        this.coreRadius = 20;
+        this.coreRadius = 40;
         this.branches = [];
         this.points = this.calculatePoints();
     }
@@ -53,16 +53,16 @@ class Flower {
             default:
                 yOffset = 0;
         }
-        const upwardOffset = R.random_int(10, 60);
+        const upwardOffset = R.random_int(20, 100);
         return y - upwardOffset + yOffset;
     }
 
     attemptBranching(x, y, index, points) {
         const { depth, maxDepth, p, h_factor, smooth_factor, flowField, resolution, index: flowerIndex, totalFlowers, patternType, core_color } = this;
-        if (R.random_bool(0.5) && depth < maxDepth) {
+        if (R.random_bool(0.2) && depth < maxDepth) {
             const angle = points.length > 1 && index > 0 ? Math.atan2(y - points[index - 1][1], x - points[index - 1][0]) : 0;
             const branchAngle = angle + (R.random_num(0.4, 0.8));
-            const branchLength = R.random_int(10, p / 2);
+            const branchLength = R.random_int(1, p / 2);
             if (flowField && flowField.length > 0) {
                 const [prevX, prevY] = points[index - 1] || [x, y];
                 const fc_1 = R_Col(SP);
@@ -117,7 +117,7 @@ class Flower {
         const resolution = 0.02;
         const scale = 1;
         const [coreX, coreY] = points[points.length - 1];
-        const scaleFactor = Math.pow(0.7, depth);
+        const scaleFactor = Math.pow(0.3, depth);
         const scaledCoreRadius = coreRadius * scaleFactor;
         ctx.save();
         ctx.beginPath();
@@ -170,13 +170,14 @@ class Flower {
     drawPetal(index, total) {
         const { fc_1, fc_2, coreRadius, points, depth } = this;
         const angle = (index / total) * 2 * Math.PI;
-        const scaleFactor = Math.pow(0.8, depth);
+        const scaleFactor = Math.pow(0.3, depth);
         const petalLength = coreRadius * scaleFactor * (0.8 + R.random_num(0.4, 1.2));
         const petalWidth = coreRadius / 2 * scaleFactor * (0.8 + R.random_num(0.4, 1.2));
-        const [petalX, petalY] = [points[points.length - 1][0] + Math.cos(angle) * coreRadius * 1.5, points[points.length - 1][1] + Math.sin(angle) * coreRadius * 1.5];
+        const [coreX, coreY] = points[points.length - 1];
+        const petalDistance = coreRadius * 1.5 * scaleFactor;
+        const [petalX, petalY] = [coreX + Math.cos(angle) * petalDistance, coreY + Math.sin(angle) * petalDistance];
         const noiseValue = perlin.noise(petalX * 0.05, petalY * 0.05);
         const n = Math.abs((noiseValue - 0.5) * 2) * scaleFactor;
-
         // this.drawPetalStroke(petalX + n, petalY + n, petalLength, petalWidth, angle, scaleFactor);
 
         ctx.save();
@@ -224,11 +225,33 @@ class Flower {
             }
             ctx.closePath();
         }
+
         const flower_gradient = ctx.createLinearGradient(-petalLength, 0, petalLength, 0);
-        flower_gradient.addColorStop(fs_1, fc_1);
-        flower_gradient.addColorStop(fs_2, fc_2);
+
+        for (let i = 0; i < numStripes; i++) {
+            const startColorPosition = (i / numStripes);
+            const endColorPosition = ((i + 1) / numStripes);
+
+            const color = i % 2 === 0 ? O_col(fc_1, 0.65) : O_col(fc_2, 0.65);
+
+            if (stripeMode) {
+                flower_gradient.addColorStop(startColorPosition, color); // Start of the stripe
+                if (i < numStripes - 1) {
+                    flower_gradient.addColorStop(endColorPosition - 0.001, color);
+                }
+            } else {
+                flower_gradient.addColorStop(startColorPosition, color);
+            }
+        }
+
+        if (stripeMode && numStripes > 1) {
+            const lastColor = numStripes % 2 === 0 ? O_col(fc_1, 0.85) : O_col(fc_2, 0.85);
+            flower_gradient.addColorStop(1, lastColor);
+        }
+
+
         ctx.fillStyle = flower_gradient;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
         ctx.shadowBlur = petalWidth * 0.4;
         ctx.shadowOffsetY = petalWidth * 0.2;
         ctx.fill();
@@ -240,7 +263,9 @@ class Flower {
         const { coreRadius, points, flower_color } = this;
         const petalLength = coreRadius * scaleFactor * (0.8 + R.random_num(0.4, 1.2));
         const petalWidth = coreRadius / 2 * scaleFactor * (0.8 + R.random_num(0.4, 1.2));
-        const [petalX, petalY] = [points[points.length - 1][0] + Math.cos(angle) * coreRadius * 1.5, points[points.length - 1][1] + Math.sin(angle) * coreRadius * 1.5];
+        const [coreX, coreY] = points[points.length - 1];
+        const petalDistance = coreRadius * 1.5 * scaleFactor;
+        const [petalX, petalY] = [coreX + Math.cos(angle) * petalDistance, coreY + Math.sin(angle) * petalDistance];
         const noiseValue = perlin.noise(petalX * 0.05, petalY * 0.05);
         const n = Math.abs((noiseValue - 0.5) * 2) * scaleFactor;
 

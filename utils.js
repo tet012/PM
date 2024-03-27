@@ -6,7 +6,7 @@ function R_Col(colorsArray) {
     return R.random_choice(colorsArray);
 }
 
-function colorWithOpacity(hslColor, opacity) {
+function O_col(hslColor, opacity) {
     let values = hslColor.match(/\d+/g);
     if (!values || values.length !== 3) {
         return hslColor;

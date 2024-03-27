@@ -40,26 +40,33 @@ const flowField = flowfield(W, H, resolution, noiseScale, noiseStrength, angleOf
 
 // Flowers
 const totalFlowers = R.random_num(1, 50);
-let h_factor = R.random_num(1, 50)
+let h_factor = R.random_num(1, 150)
 let striped_stem = R.random_bool(0.5);
 const smooth_factor = R.random_int(0, 4);
 const angleType = R.random_choice(['straight', 'curvy', 'random']);
 
-// Petals
+// Petals Shape
 let mode = R.random_int(0, 2);
 let numSides = R.random_int(3, 8);
 const angleStep = (Math.PI * 2) / numSides;
-const fs_1 = R.random_num(0, 1)
-const fs_2 = R.random_num(0, 1)
 const messy_ellipse = R.random_bool(0.6);
 let ellipse_resolution;
-console.log(messy_ellipse)
 if (messy_ellipse) {
     ellipse_resolution = R.random_num(0.1, 0.0001)
 } else {
     ellipse_resolution = 0.001
-
 }
+
+// Petals Colors
+const fs_1 = R.random_num(0, 1)
+const fs_2 = R.random_num(0, 1)
+const stripeMode = R.random_bool(0.1);
+if (stripeMode) {
+    numStripes = R.random_int(1, 10);
+} else {
+    numStripes = 3
+}
+
 // Sun
 const sunX = W * R.random_num(0, 1);
 const sunY = H * R.random_num(0, .7);
@@ -67,7 +74,6 @@ const sunRadius = R.random_num(125, 250)
 drawSun(sunX, sunY, sunRadius);
 
 function draw() {
-
     for (let f = 0; f < totalFlowers; f++) {
         const fc_1 = R_Col(SP);
         const fc_2 = R_Col(SP);
@@ -78,6 +84,7 @@ function draw() {
         flower.draw();
     }
     drawGround();
+    granulate(15)
 }
 
 function drawGround() {
@@ -99,15 +106,32 @@ function drawSun(x, y, radius) {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    gradient.addColorStop(0, 'rgba(255, 255, 0, 0.9)');
-    gradient.addColorStop(1, 'rgba(255, 255, 0, 0.6)');
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius * i / 5, 0, 2 * Math.PI);
+        sc_1 = 0.9 - i / 20;
+        sc_2 = 0.6 - i / 20;
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, `rgba(255, 255, 0, ${sc_1}`);
+        gradient.addColorStop(1, `rgba(255, 255, 0, ${sc_2}`);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
     ctx.restore();
 }
+
+function granulate(amount) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+        let grainAmount = Math.random() * (amount * 2) - amount;
+        pixels[i] = Math.max(0, Math.min(255, pixels[i] + grainAmount));
+        pixels[i + 1] = Math.max(0, Math.min(255, pixels[i + 1] + grainAmount));
+        pixels[i + 2] = Math.max(0, Math.min(255, pixels[i + 2] + grainAmount));
+    }
+    ctx.putImageData(imageData, 0, 0);
+}
+
+
 
 draw();
